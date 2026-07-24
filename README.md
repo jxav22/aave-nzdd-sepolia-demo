@@ -69,6 +69,14 @@ Run smart contract test with `yarn hardhat:test`
 - Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
 - Edit your deployment scripts in `packages/hardhat/deploy`
 
+## Aave V3 Sepolia
+
+This repo includes a minimal frontend integration with the **official Aave V3 market on Ethereum Sepolia** (test EURS; USDC is supply-capped on this market).
+
+- **Web2 engineers:** start with [docs/WEB2_HANDOFF.md](docs/WEB2_HANDOFF.md) (concepts, day-1 run path, file map).
+- **Technical reference:** [docs/AAVE_SEPOLIA.md](docs/AAVE_SEPOLIA.md) (faucet details, `useAaveSepolia` hook API, limitations).
+
+Open the UI at `/aave` after `yarn start`. Required RPC env var: `ALCHEMY_API_KEY` in `packages/nextjs/.env.local`.
 
 ## Documentation
 
