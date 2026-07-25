@@ -10,9 +10,11 @@ describe("aaveHackathonMnzdConfig", () => {
     expect(isAddress(aaveHackathonMnzdConfig.poolAddress)).toBe(true);
     expect(isAddress(aaveHackathonMnzdConfig.asset.underlyingAddress)).toBe(true);
     expect(isAddress(aaveHackathonMnzdConfig.asset.aTokenAddress)).toBe(true);
+    expect(isAddress(aaveHackathonMnzdConfig.asset.variableDebtTokenAddress)).toBe(true);
     expect(aaveHackathonMnzdConfig.poolAddress).toBe(hackathonMarket.pool);
     expect(aaveHackathonMnzdConfig.asset.underlyingAddress).toBe(hackathonMarket.underlying.address);
     expect(aaveHackathonMnzdConfig.asset.aTokenAddress).toBe(hackathonMarket.aToken);
+    expect(aaveHackathonMnzdConfig.asset.variableDebtTokenAddress).toBe(hackathonMarket.variableDebtToken);
     expect(aaveHackathonMnzdConfig.asset.protocolSymbol).toBe("mNZD");
     expect(aaveHackathonMnzdConfig.asset.displaySymbol).toBe("mNZD");
     expect(aaveHackathonMnzdConfig.asset.decimals).toBe(6);

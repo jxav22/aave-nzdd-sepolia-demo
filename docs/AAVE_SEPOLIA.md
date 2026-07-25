@@ -8,8 +8,10 @@ This Scaffold-ETH 2 frontend connects to the **official Aave V3 market on Ethere
 - Approve the Aave V3 Pool to spend EURS (exact amount)
 - Supply EURS and view the resulting aToken balance
 - Withdraw a specified amount or the full position
+- **Borrow** EURS against supplied EURS (variable rate) and view variable debt + health factor
+- **Repay** partial or full debt (`maxUint256`)
 
-The reusable hook for other engineers is `useAaveSepolia`.
+The reusable hook for other engineers is `useAaveSepolia`. Shared UI panel: `AaveMarketPanel`.
 
 **Why EURS:** Public Sepolia **USDC** hits Aave error `51` (`SUPPLY_CAP_EXCEEDED`). Verified `getReserveCaps(EURS)` returns uncapped supply (`supplyCap: 0`). This keeps the demo on live Ethereum Sepolia without a fork.
 
@@ -84,14 +86,17 @@ Docs: [Aave testing & debugging](https://aave.com/docs/aave-v3/smart-contracts/t
 
 **Important:** Do not use Circle’s Sepolia USDC or Base USDC. Those are different contracts/chains and will not work with this Pool. Sepolia USDC on Aave is also supply-capped for public users.
 
-## 9. Approval → supply → aToken → withdrawal flow
+## 9. Approval → supply / borrow → withdrawal / repay flow
 
 1. **Approve** — `SepoliaEURS.approve(pool, amount)` with an exact amount when allowance is insufficient
 2. **Supply** — `Pool.supply(EURS, amount, user, 0)` after allowance covers the amount
 3. **aToken balance** — read `aToken.balanceOf(user)` (interest-bearing supply position)
 4. **Withdraw** — `Pool.withdraw(EURS, amount, user)` or `withdraw(EURS, maxUint256, user)` for full exit
+5. **Borrow** — `Pool.borrow(EURS, amount, interestRateMode=2, referralCode=0, user)` (variable rate, same asset)
+6. **Debt / health** — variable debt token `balanceOf` + `Pool.getUserAccountData(user)`
+7. **Repay** — approve again if needed, then `Pool.repay(EURS, amount, 2, user)` or `repay(..., maxUint256, ...)` for full exit
 
-Withdrawal can fail if market liquidity is low or the position is constrained by debt/collateral. Failed withdrawals are surfaced as errors — never treated as success.
+Withdrawal / borrow / repay can fail if market liquidity is low or the position is constrained by debt/collateral. Failures are surfaced as errors — never treated as success.
 
 ## 10. Where contract addresses come from
 
@@ -100,10 +105,11 @@ import { AaveV3Sepolia } from "@aave-dao/aave-address-book";
 // AaveV3Sepolia.POOL
 // AaveV3Sepolia.ASSETS.EURS.UNDERLYING
 // AaveV3Sepolia.ASSETS.EURS.A_TOKEN
+// AaveV3Sepolia.ASSETS.EURS.V_TOKEN
 // AaveV3Sepolia.ASSETS.EURS.decimals  // typically 2
 ```
 
-Centralized in [`packages/nextjs/config/aaveSepolia.ts`](../packages/nextjs/config/aaveSepolia.ts). Registered for Scaffold-ETH hooks in [`packages/nextjs/contracts/externalContracts.ts`](../packages/nextjs/contracts/externalContracts.ts) as `SepoliaEURS`, `AaveV3Pool`, and `AaveSepoliaAToken`.
+Centralized in [`packages/nextjs/config/aaveSepolia.ts`](../packages/nextjs/config/aaveSepolia.ts). Registered for Scaffold-ETH hooks in [`packages/nextjs/contracts/externalContracts.ts`](../packages/nextjs/contracts/externalContracts.ts) as `SepoliaEURS`, `AaveV3Pool`, `AaveSepoliaAToken`, and `AaveSepoliaVariableDebt`.
 
 There is no separate TypeScript `AaveV3SepoliaAssets` export; assets live under `AaveV3Sepolia.ASSETS`.
 
@@ -118,6 +124,9 @@ const {
   supply,
   withdraw,
   withdrawAll,
+  borrow,
+  repay,
+  repayAll,
   refresh,
   config,
 } = useAaveSepolia();
@@ -125,18 +134,18 @@ const {
 
 ### Return type (summary)
 
-- **`state`**: `walletBalance`, `suppliedBalance`, `allowance` (`bigint`); `decimals`, `symbol`; `isCorrectNetwork`, `isConnected`, `isReading`, `isApproving`, `isSupplying`, `isWithdrawing`; optional `error` / `decimalsMismatch`
-- **`approve(amount)` / `supply(amount)` / `withdraw(amount)`**: human-readable decimal strings; parse with token decimals; wait for confirmation; refresh reads afterward
-- **`withdrawAll()`**: uses `maxUint256`
+- **`state`**: `walletBalance`, `suppliedBalance`, `borrowedBalance`, `allowance`; account health (`totalCollateralBase`, `totalDebtBase`, `availableBorrowsBase`, `ltv`, `healthFactor`); `decimals`, `symbol`; busy flags including `isBorrowing` / `isRepaying`; optional `error` / `decimalsMismatch`
+- **`approve(amount)` / `supply(amount)` / `withdraw(amount)` / `borrow(amount)` / `repay(amount)`**: human-readable decimal strings; parse with token decimals; wait for confirmation; refresh reads afterward
+- **`withdrawAll()` / `repayAll()`**: use `maxUint256`
 - **`config`**: typed `aaveSepoliaConfig` (addresses + metadata)
 
 Transaction behavior:
 
 - Rejects zero / negative / malformed amounts and excess precision
-- Supply requires wallet, Sepolia, balance, and sufficient allowance
+- Supply / repay require wallet, Sepolia, balance, and sufficient allowance
 - Approve uses exact amount (not unlimited)
-- Approve and supply never chain automatically
-- Errors use `getParsedError` plus explicit messages for rejection, balance, allowance, and network
+- Approve and supply/repay never chain automatically
+- Errors use mapped Aave / wallet messages for rejection, balance, allowance, health factor, and liquidity
 
 ## 12. Known testnet limitations
 

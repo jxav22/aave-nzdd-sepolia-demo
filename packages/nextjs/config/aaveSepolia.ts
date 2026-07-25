@@ -32,6 +32,10 @@ if (!eursAsset.A_TOKEN || !isAddress(eursAsset.A_TOKEN)) {
   throw new Error("Aave V3 Sepolia EURS.A_TOKEN is missing or invalid in the address book.");
 }
 
+if (!eursAsset.V_TOKEN || !isAddress(eursAsset.V_TOKEN)) {
+  throw new Error("Aave V3 Sepolia EURS.V_TOKEN is missing or invalid in the address book.");
+}
+
 if (!AaveV3Sepolia.POOL || !isAddress(AaveV3Sepolia.POOL)) {
   throw new Error("Aave V3 Sepolia POOL is missing or invalid in the address book.");
 }
@@ -56,6 +60,7 @@ export const aaveSepoliaConfig = {
     displaySymbol: "EURS" as const,
     underlyingAddress: eursAsset.UNDERLYING as Address,
     aTokenAddress: eursAsset.A_TOKEN as Address,
+    variableDebtTokenAddress: eursAsset.V_TOKEN as Address,
     decimals: ADDRESS_BOOK_EURS_DECIMALS,
   },
 } as const;

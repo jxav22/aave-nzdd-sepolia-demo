@@ -8,6 +8,7 @@ describe("aaveSepoliaConfig", () => {
     expect(isAddress(aaveSepoliaConfig.poolAddress)).toBe(true);
     expect(isAddress(aaveSepoliaConfig.asset.underlyingAddress)).toBe(true);
     expect(isAddress(aaveSepoliaConfig.asset.aTokenAddress)).toBe(true);
+    expect(isAddress(aaveSepoliaConfig.asset.variableDebtTokenAddress)).toBe(true);
     expect(aaveSepoliaConfig.asset.protocolSymbol).toBe("EURS");
     expect(aaveSepoliaConfig.asset.displaySymbol).toBe("EURS");
     expect(aaveSepoliaConfig.asset.decimals).toBe(2);

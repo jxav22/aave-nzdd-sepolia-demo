@@ -1,21 +1,28 @@
 import { useCallback, useMemo, useState } from "react";
-import { type Address, formatUnits, getAddress, isAddressEqual } from "viem";
+import { type Address, formatUnits, getAddress, isAddressEqual, maxUint256 } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { aaveHackathonMnzdConfig } from "~~/config/aaveHackathonMnzd";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import {
-  ParseAmountError,
+  REPAY_ALL_AMOUNT,
   WITHDRAW_ALL_AMOUNT,
   hasSufficientAllowance,
   hasSufficientBalance,
   parseTokenAmount,
 } from "~~/utils/aave/amount";
-import { getParsedError, notification } from "~~/utils/scaffold-eth";
+import { VARIABLE_INTEREST_RATE_MODE, mapAaveTxError } from "~~/utils/aave/errors";
+import { notification } from "~~/utils/scaffold-eth";
 
 export type AaveHackathonMnzdState = {
   walletBalance: bigint;
   suppliedBalance: bigint;
+  borrowedBalance: bigint;
   allowance: bigint;
+  totalCollateralBase: bigint;
+  totalDebtBase: bigint;
+  availableBorrowsBase: bigint;
+  ltv: bigint;
+  healthFactor: bigint;
   decimals: number;
   symbol: string;
   tokenOwner?: Address;
@@ -25,6 +32,8 @@ export type AaveHackathonMnzdState = {
   isApproving: boolean;
   isSupplying: boolean;
   isWithdrawing: boolean;
+  isBorrowing: boolean;
+  isRepaying: boolean;
   isMinting: boolean;
   isOwner: boolean;
   decimalsMismatch?: string;
@@ -37,6 +46,9 @@ export type AaveHackathonMnzdActions = {
   supply: (amount: string) => Promise<void>;
   withdraw: (amount: string) => Promise<void>;
   withdrawAll: () => Promise<void>;
+  borrow: (amount: string) => Promise<void>;
+  repay: (amount: string) => Promise<void>;
+  repayAll: () => Promise<void>;
   refresh: () => Promise<void>;
   switchToSepolia: () => Promise<void>;
 };
@@ -49,37 +61,17 @@ export type UseAaveHackathonMnzdReturn = AaveHackathonMnzdActions & {
 
 const ZERO = 0n;
 
+const OWNABLE_MINT_HINT =
+  "Only the mNZD token owner can mint. Connect the deployer wallet or ask the owner to mint for you.";
+
 function mapTxError(error: unknown, fallback: string): string {
-  if (error instanceof ParseAmountError) {
-    return error.message;
-  }
-
-  const message = getParsedError(error);
-  const lower = message.toLowerCase();
-  const raw = typeof error === "object" && error !== null ? JSON.stringify(error) : String(error ?? "");
-  const combined = `${message}\n${raw}`.toLowerCase();
-
-  if (lower.includes("user rejected") || lower.includes("user denied") || lower.includes("rejected the request")) {
-    return "Transaction rejected in wallet.";
-  }
-
-  // OZ OwnableUnauthorizedAccount(address) — selector 0x118cdaa7
-  if (
-    combined.includes("ownableunauthorizedaccount") ||
-    combined.includes("0x118cdaa7") ||
-    combined.includes("onlyowner") ||
-    combined.includes("caller is not the owner")
-  ) {
-    return "Only the mNZD token owner can mint. Connect the deployer wallet or ask the owner to mint for you.";
-  }
-
-  return message || fallback;
+  return mapAaveTxError(error, fallback, { ownableMintHint: OWNABLE_MINT_HINT });
 }
 
 /**
  * Custom hackathon Aave V3 market (mNZD) integration hook.
  *
- * Mint (owner), approve, and supply are separate confirmed transactions.
+ * Mint (owner), approve, supply, and repay are separate confirmed transactions.
  */
 export function useAaveHackathonMnzd(): UseAaveHackathonMnzdReturn {
   const { address, chainId, isConnected } = useAccount();
@@ -89,6 +81,8 @@ export function useAaveHackathonMnzd(): UseAaveHackathonMnzdReturn {
   const [isApproving, setIsApproving] = useState(false);
   const [isSupplying, setIsSupplying] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isBorrowing, setIsBorrowing] = useState(false);
+  const [isRepaying, setIsRepaying] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
 
   const isCorrectNetwork = isConnected && chainId === aaveHackathonMnzdConfig.chainId;
@@ -157,6 +151,28 @@ export function useAaveHackathonMnzd(): UseAaveHackathonMnzdReturn {
     query: { enabled },
   });
 
+  const {
+    data: borrowedBalance,
+    isLoading: isLoadingBorrowed,
+    refetch: refetchBorrowed,
+  } = useScaffoldReadContract({
+    contractName: "HackathonVariableDebt",
+    functionName: "balanceOf",
+    args: [address],
+    query: { enabled },
+  });
+
+  const {
+    data: accountData,
+    isLoading: isLoadingAccount,
+    refetch: refetchAccount,
+  } = useScaffoldReadContract({
+    contractName: "HackathonPool",
+    functionName: "getUserAccountData",
+    args: [address],
+    query: { enabled },
+  });
+
   const { writeContractAsync: writeUnderlyingAsync } = useScaffoldWriteContract({
     contractName: "HackathonMnzd",
   });
@@ -179,11 +195,22 @@ export function useAaveHackathonMnzd(): UseAaveHackathonMnzdReturn {
       refetchBalance(),
       refetchAllowance(),
       refetchSupplied(),
+      refetchBorrowed(),
+      refetchAccount(),
       refetchDecimals(),
       refetchSymbol(),
       refetchOwner(),
     ]);
-  }, [refetchAllowance, refetchBalance, refetchDecimals, refetchOwner, refetchSupplied, refetchSymbol]);
+  }, [
+    refetchAccount,
+    refetchAllowance,
+    refetchBalance,
+    refetchBorrowed,
+    refetchDecimals,
+    refetchOwner,
+    refetchSupplied,
+    refetchSymbol,
+  ]);
 
   const requireWalletAndNetwork = useCallback(() => {
     if (!isConnected || !address) {
@@ -395,6 +422,134 @@ export function useAaveHackathonMnzd(): UseAaveHackathonMnzdReturn {
     }
   }, [refresh, requireWalletAndNetwork, suppliedBalance, symbol, writePoolAsync]);
 
+  const borrow = useCallback(
+    async (amount: string) => {
+      setError(undefined);
+      setIsBorrowing(true);
+      try {
+        const user = requireWalletAndNetwork();
+        const parsed = parseTokenAmount(amount, decimals);
+
+        const txHash = await writePoolAsync({
+          functionName: "borrow",
+          args: [aaveHackathonMnzdConfig.asset.underlyingAddress, parsed, VARIABLE_INTEREST_RATE_MODE, 0, user],
+        });
+
+        if (!txHash) {
+          throw new Error("Borrow transaction was not submitted.");
+        }
+
+        await refresh();
+        notification.success(`Borrowed ${amount} ${symbol} from the hackathon market.`);
+      } catch (e) {
+        const message = mapTxError(
+          e,
+          "Borrow failed. Supply collateral first, keep health factor above 1, and ensure the reserve has liquidity.",
+        );
+        setError(message);
+        notification.error(message);
+        throw e;
+      } finally {
+        setIsBorrowing(false);
+      }
+    },
+    [decimals, refresh, requireWalletAndNetwork, symbol, writePoolAsync],
+  );
+
+  const repay = useCallback(
+    async (amount: string) => {
+      setError(undefined);
+      setIsRepaying(true);
+      try {
+        const user = requireWalletAndNetwork();
+        const parsed = parseTokenAmount(amount, decimals);
+        const debt = borrowedBalance ?? ZERO;
+        const balance = walletBalance ?? ZERO;
+        const currentAllowance = allowance ?? ZERO;
+
+        if (debt <= ZERO) {
+          throw new Error("No outstanding debt to repay.");
+        }
+
+        if (!hasSufficientBalance(parsed, balance)) {
+          throw new Error(`Insufficient wallet ${symbol} balance to repay.`);
+        }
+
+        if (!hasSufficientAllowance(parsed, currentAllowance)) {
+          throw new Error(
+            "Insufficient allowance. Approve the hackathon Pool for this amount first (separate transaction).",
+          );
+        }
+
+        const txHash = await writePoolAsync({
+          functionName: "repay",
+          args: [aaveHackathonMnzdConfig.asset.underlyingAddress, parsed, VARIABLE_INTEREST_RATE_MODE, user],
+        });
+
+        if (!txHash) {
+          throw new Error("Repay transaction was not submitted.");
+        }
+
+        await refresh();
+        notification.success(`Repaid ${amount} ${symbol} on the hackathon market.`);
+      } catch (e) {
+        const message = mapTxError(e, "Repay failed.");
+        setError(message);
+        notification.error(message);
+        throw e;
+      } finally {
+        setIsRepaying(false);
+      }
+    },
+    [allowance, borrowedBalance, decimals, refresh, requireWalletAndNetwork, symbol, walletBalance, writePoolAsync],
+  );
+
+  const repayAll = useCallback(async () => {
+    setError(undefined);
+    setIsRepaying(true);
+    try {
+      const user = requireWalletAndNetwork();
+      const debt = borrowedBalance ?? ZERO;
+      const balance = walletBalance ?? ZERO;
+      const currentAllowance = allowance ?? ZERO;
+
+      if (debt <= ZERO) {
+        throw new Error("No outstanding debt to repay.");
+      }
+
+      if (!hasSufficientBalance(debt, balance)) {
+        throw new Error(
+          `Insufficient wallet ${symbol} balance to repay the full debt (${formatUnits(debt, decimals)}).`,
+        );
+      }
+
+      if (!hasSufficientAllowance(debt, currentAllowance)) {
+        throw new Error(
+          `Insufficient allowance. Approve at least ${formatUnits(debt, decimals)} ${symbol} for the hackathon Pool first (separate transaction).`,
+        );
+      }
+
+      const txHash = await writePoolAsync({
+        functionName: "repay",
+        args: [aaveHackathonMnzdConfig.asset.underlyingAddress, REPAY_ALL_AMOUNT, VARIABLE_INTEREST_RATE_MODE, user],
+      });
+
+      if (!txHash) {
+        throw new Error("Repay-all transaction was not submitted.");
+      }
+
+      await refresh();
+      notification.success(`Repaid full ${symbol} debt on the hackathon market.`);
+    } catch (e) {
+      const message = mapTxError(e, "Repay-all failed.");
+      setError(message);
+      notification.error(message);
+      throw e;
+    } finally {
+      setIsRepaying(false);
+    }
+  }, [allowance, borrowedBalance, decimals, refresh, requireWalletAndNetwork, symbol, walletBalance, writePoolAsync]);
+
   const formatAmount = useCallback(
     (value: bigint) => {
       try {
@@ -410,7 +565,14 @@ export function useAaveHackathonMnzd(): UseAaveHackathonMnzdReturn {
     () => ({
       walletBalance: walletBalance ?? ZERO,
       suppliedBalance: suppliedBalance ?? ZERO,
+      borrowedBalance: borrowedBalance ?? ZERO,
       allowance: allowance ?? ZERO,
+      // getUserAccountData returns a tuple: collateral, debt, availableBorrows, liqThreshold, ltv, healthFactor
+      totalCollateralBase: accountData?.[0] ?? ZERO,
+      totalDebtBase: accountData?.[1] ?? ZERO,
+      availableBorrowsBase: accountData?.[2] ?? ZERO,
+      ltv: accountData?.[4] ?? ZERO,
+      healthFactor: accountData?.[5] ?? maxUint256,
       decimals,
       symbol,
       tokenOwner: tokenOwner as Address | undefined,
@@ -420,33 +582,43 @@ export function useAaveHackathonMnzd(): UseAaveHackathonMnzdReturn {
         isLoadingBalance ||
         isLoadingAllowance ||
         isLoadingSupplied ||
+        isLoadingBorrowed ||
+        isLoadingAccount ||
         isLoadingDecimals ||
         isLoadingSymbol ||
         isLoadingOwner,
       isApproving,
       isSupplying,
       isWithdrawing,
+      isBorrowing,
+      isRepaying,
       isMinting,
       isOwner,
       decimalsMismatch,
       error,
     }),
     [
+      accountData,
       allowance,
+      borrowedBalance,
       decimals,
       decimalsMismatch,
       error,
       isApproving,
+      isBorrowing,
       isConnected,
       isCorrectNetwork,
+      isLoadingAccount,
       isLoadingAllowance,
       isLoadingBalance,
+      isLoadingBorrowed,
       isLoadingDecimals,
       isLoadingOwner,
       isLoadingSupplied,
       isLoadingSymbol,
       isMinting,
       isOwner,
+      isRepaying,
       isSupplying,
       isWithdrawing,
       suppliedBalance,
@@ -464,6 +636,9 @@ export function useAaveHackathonMnzd(): UseAaveHackathonMnzdReturn {
     supply,
     withdraw,
     withdrawAll,
+    borrow,
+    repay,
+    repayAll,
     refresh,
     switchToSepolia,
     formatAmount,

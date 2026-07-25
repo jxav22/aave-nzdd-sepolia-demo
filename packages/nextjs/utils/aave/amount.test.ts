@@ -1,11 +1,16 @@
 import {
   ParseAmountError,
+  REPAY_ALL_AMOUNT,
   WITHDRAW_ALL_AMOUNT,
+  formatAaveBaseAmount,
+  formatHealthFactor,
   hasSufficientAllowance,
   hasSufficientBalance,
+  isRepayAllAmount,
   isWithdrawAllAmount,
   parseTokenAmount,
 } from "./amount";
+import { maxUint256 } from "viem";
 import { describe, expect, it } from "vitest";
 
 describe("parseTokenAmount", () => {
@@ -56,9 +61,33 @@ describe("balance and allowance guards", () => {
   });
 });
 
-describe("withdraw-all amount", () => {
+describe("withdraw-all and repay-all amounts", () => {
   it("uses maxUint256 for withdraw all", () => {
     expect(isWithdrawAllAmount(WITHDRAW_ALL_AMOUNT)).toBe(true);
     expect(isWithdrawAllAmount(1n)).toBe(false);
+  });
+
+  it("uses maxUint256 for repay all", () => {
+    expect(isRepayAllAmount(REPAY_ALL_AMOUNT)).toBe(true);
+    expect(REPAY_ALL_AMOUNT).toBe(WITHDRAW_ALL_AMOUNT);
+    expect(isRepayAllAmount(1n)).toBe(false);
+  });
+});
+
+describe("formatHealthFactor", () => {
+  it("shows infinity when health factor is maxUint256 (no debt)", () => {
+    expect(formatHealthFactor(maxUint256)).toBe("∞");
+  });
+
+  it("formats 1e18-scaled health factors", () => {
+    expect(formatHealthFactor(10n ** 18n)).toBe("1");
+    expect(formatHealthFactor(15n * 10n ** 17n)).toBe("1.5");
+  });
+});
+
+describe("formatAaveBaseAmount", () => {
+  it("formats 8-decimal base currency amounts", () => {
+    expect(formatAaveBaseAmount(100_000_000n)).toBe("1");
+    expect(formatAaveBaseAmount(150_000_000n)).toBe("1.5");
   });
 });

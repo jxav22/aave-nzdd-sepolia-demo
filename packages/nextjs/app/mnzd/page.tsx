@@ -6,20 +6,40 @@ import type { NextPage } from "next";
 import type { Address as AddressType } from "viem";
 import { sepolia } from "viem/chains";
 import { useAccount } from "wagmi";
+import { AaveMarketPanel } from "~~/components/aave/AaveMarketPanel";
 import { useAaveHackathonMnzd } from "~~/hooks/aave/useAaveHackathonMnzd";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth";
 
 const MnzdPage: NextPage = () => {
   const { address } = useAccount();
   const { targetNetwork } = useTargetNetwork();
-  const { state, config, mint, approve, supply, withdraw, withdrawAll, refresh, switchToSepolia, formatAmount } =
-    useAaveHackathonMnzd();
+  const {
+    state,
+    config,
+    mint,
+    approve,
+    supply,
+    withdraw,
+    withdrawAll,
+    borrow,
+    repay,
+    repayAll,
+    refresh,
+    switchToSepolia,
+    formatAmount,
+  } = useAaveHackathonMnzd();
   const [amount, setAmount] = useState("");
   const [mintAmount, setMintAmount] = useState("");
   const [mintTo, setMintTo] = useState("");
 
   const explorerAddress = (addr: string) => `${config.explorerBaseUrl}/address/${addr}`;
-  const isBusy = state.isApproving || state.isSupplying || state.isWithdrawing || state.isMinting;
+  const isBusy =
+    state.isApproving ||
+    state.isSupplying ||
+    state.isWithdrawing ||
+    state.isBorrowing ||
+    state.isRepaying ||
+    state.isMinting;
   const hasZeroWalletBalance = state.isConnected && state.isCorrectNetwork && state.walletBalance === 0n;
 
   return (
@@ -31,7 +51,7 @@ const MnzdPage: NextPage = () => {
           <p className="text-base font-medium">Custom Aave V3 Pool + mNZD on Ethereum Sepolia</p>
           <p className="text-sm opacity-70 mt-1">
             Deployed from aave-v3-origin. mNZD is a Mock NZD Stable stand-in (6 decimals) — not real NZDD, dNZD, or
-            zNZD. Separate from the official Aave Sepolia EURS market on{" "}
+            zNZD. Same-asset supply and variable borrow. Separate from the official Aave Sepolia EURS market on{" "}
             <a className="link" href="/aave">
               /aave
             </a>
@@ -97,20 +117,17 @@ const MnzdPage: NextPage = () => {
             </a>
             <Address address={config.asset.aTokenAddress} chain={sepolia} />
           </div>
-        </div>
-
-        <div className="bg-base-200 rounded-lg p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-          <div>
-            <div className="opacity-70">Wallet {state.symbol}</div>
-            <div className="font-mono text-lg">{state.isReading ? "…" : formatAmount(state.walletBalance)}</div>
-          </div>
-          <div>
-            <div className="opacity-70">Allowance</div>
-            <div className="font-mono text-lg">{state.isReading ? "…" : formatAmount(state.allowance)}</div>
-          </div>
-          <div>
-            <div className="opacity-70">Supplied (aToken)</div>
-            <div className="font-mono text-lg">{state.isReading ? "…" : formatAmount(state.suppliedBalance)}</div>
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">Variable debt token</span>
+            <a
+              className="link break-all"
+              href={explorerAddress(config.asset.variableDebtTokenAddress)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {config.asset.variableDebtTokenAddress}
+            </a>
+            <Address address={config.asset.variableDebtTokenAddress} chain={sepolia} />
           </div>
         </div>
 
@@ -185,66 +202,34 @@ const MnzdPage: NextPage = () => {
 
         {state.error && <div className="alert alert-error text-sm whitespace-pre-wrap">{state.error}</div>}
 
-        <div className="bg-base-200 rounded-lg p-4 flex flex-col gap-3">
-          <label className="form-control w-full">
-            <span className="label-text font-semibold mb-1">Amount ({state.symbol})</span>
-            <input
-              type="text"
-              inputMode="decimal"
-              className="input input-bordered w-full"
-              placeholder="0.0"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              disabled={isBusy}
-            />
-          </label>
-
-          <p className="text-xs opacity-70">
-            Approve and Supply are separate transactions. Approve first when allowance is insufficient, then Supply.
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              className="btn btn-secondary"
-              disabled={!state.isCorrectNetwork || isBusy || !amount}
-              onClick={() => void approve(amount)}
-            >
-              {state.isApproving ? <span className="loading loading-spinner loading-sm" /> : null}
-              Approve
-            </button>
-            <button
-              className="btn btn-primary"
-              disabled={!state.isCorrectNetwork || isBusy || !amount}
-              onClick={() => void supply(amount)}
-            >
-              {state.isSupplying ? <span className="loading loading-spinner loading-sm" /> : null}
-              Supply
-            </button>
-            <button
-              className="btn btn-accent"
-              disabled={!state.isCorrectNetwork || isBusy || !amount}
-              onClick={() => void withdraw(amount)}
-            >
-              {state.isWithdrawing ? <span className="loading loading-spinner loading-sm" /> : null}
-              Withdraw
-            </button>
-            <button
-              className="btn btn-outline"
-              disabled={!state.isCorrectNetwork || isBusy || state.suppliedBalance === 0n}
-              onClick={() => void withdrawAll()}
-            >
-              Withdraw all
-            </button>
-            <button className="btn btn-ghost btn-sm" disabled={isBusy} onClick={() => void refresh()}>
-              Refresh
-            </button>
-          </div>
-
-          <p className="text-xs opacity-70">
-            Withdrawal can fail when market liquidity is unavailable or the position is constrained by debt/collateral
-            requirements.
-          </p>
-        </div>
+        <AaveMarketPanel
+          symbol={state.symbol}
+          amount={amount}
+          onAmountChange={setAmount}
+          walletBalance={state.walletBalance}
+          allowance={state.allowance}
+          suppliedBalance={state.suppliedBalance}
+          borrowedBalance={state.borrowedBalance}
+          availableBorrowsBase={state.availableBorrowsBase}
+          healthFactor={state.healthFactor}
+          isReading={state.isReading}
+          isCorrectNetwork={state.isCorrectNetwork}
+          isBusy={isBusy}
+          isApproving={state.isApproving}
+          isSupplying={state.isSupplying}
+          isWithdrawing={state.isWithdrawing}
+          isBorrowing={state.isBorrowing}
+          isRepaying={state.isRepaying}
+          formatAmount={formatAmount}
+          onApprove={() => void approve(amount)}
+          onSupply={() => void supply(amount)}
+          onWithdraw={() => void withdraw(amount)}
+          onWithdrawAll={() => void withdrawAll()}
+          onBorrow={() => void borrow(amount)}
+          onRepay={() => void repay(amount)}
+          onRepayAll={() => void repayAll()}
+          onRefresh={() => void refresh()}
+        />
       </div>
     </div>
   );

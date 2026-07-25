@@ -46,7 +46,7 @@ The original plan (§5 / §9) was a **custom ~150-line `LendingPool`** + `MockDN
 - [ ] Gas-drip endpoint for new embedded wallets
 - [ ] Mocked Pay It Now “Add NZD” screen
 - [ ] One-button **Earn** UX
-- [ ] **Borrow** screen (ETH collateral → borrow NZD → health factor) — Aave debt token exists in hackathon JSON; UI/hooks not wired
+- [~] **Borrow** — same-asset variable borrow/repay + health factor wired on `/aave` and `/mnzd` (EURS / mNZD). ETH-collateral → borrow NZD pitch screen still **not** built.
 - [ ] Live dashboard (users onboarded, total supplied, live APY via events)
 - [ ] Controllable oracle price-drop / liquidation drama (`MockOracle.setEthPriceInNZD`)
 - [ ] Custom Hardhat `LendingPool` / `MockDNZD` / `MockOracle` (superseded by Aave path unless we revive it)
@@ -73,7 +73,7 @@ Official EURS Pool / underlying / aToken: resolved at runtime from `@aave-dao/aa
 1. Consumer shell on top of `/mnzd` (NZD copy, hide crypto jargon) — balances already exist in the hook.
 2. Mocked **Add NZD** (Pay It Now) → call owner `mint` or a temporary open-mint helper.
 3. Optional one-button **Earn** (still two txs under the hood; UX can sequence approve → supply).
-4. **Borrow** path against Aave (collateral + `borrow` / `repay` + health factor from `getUserAccountData`).
+4. Optional ETH-collateral borrow UX (multi-asset) if the pitch still needs it — same-asset borrow/repay is already live on `/aave` + `/mnzd`.
 5. Privy + gas drip if live email onboarding is still a pitch requirement.
 6. Live dashboard (events / aggregates) once supply+borrow traffic exists.
 
@@ -113,7 +113,7 @@ Almost every one of these pools is denominated in **US dollars**. So a New Zeala
 
 > ⚠️ **Do not build a "swap ETH → dNZD" screen.** Swapping is a disposal and kills the tax angle. The borrower flow is a **loan** (deposit collateral, then borrow).
 
-> **[STATUS]** Saver supply path: **partial** (RainbowKit connect + mint/approve/supply on `/mnzd`). Email / Privy / Pay It Now / one-button Earn: **not started**. Borrower path: **not started** (debt token address exists; no borrow UI).
+> **[STATUS]** Saver supply path: **partial** (RainbowKit connect + mint/approve/supply on `/mnzd`). Email / Privy / Pay It Now / one-button Earn: **not started**. Same-asset borrower path: **wired** on `/aave` + `/mnzd` (variable borrow/repay + HF). ETH-collateral borrow pitch screen: **not started**.
 
 ---
 
@@ -290,7 +290,7 @@ Standard ERC-20, plus an open mint so the mocked Pay It Now step can hand out te
 | Borrow | `borrow(uint256 amount)` | Borrow dNZD against deposited collateral, up to LTV. |
 | Repay | `repay(uint256 amount)` | Repay dNZD debt. Needs prior `approve`. |
 
-> **[STATUS]** Not implemented as a custom contract. Aave equivalents in use: `Pool.supply` / `Pool.withdraw` (and `withdraw` with `maxUint256` for full exit). Borrow / repay / collateral helpers: **on-chain via Aave, UI not wired**.
+> **[STATUS]** Not implemented as a custom contract. Aave equivalents in use: `Pool.supply` / `Pool.withdraw` / `Pool.borrow` / `Pool.repay` (full exit with `maxUint256`). Same-asset borrow UI wired on `/aave` + `/mnzd`; ETH-collateral deposit UI not built.
 
 ### 4.5 LendingPool — view functions (free, instant, no transaction)
 
@@ -304,7 +304,7 @@ Standard ERC-20, plus an open mint so the mocked Pay It Now step can hand out te
 | Health factor | `getHealthFactor(address user)` | `uint256` | 18-dec fixed point. `10^18` = 1.0. If debt is 0, return a huge number (fully healthy). |
 | Max borrow | `getMaxBorrow(address user)` | `uint256` | How much MORE dNZD the user can safely borrow, base units. Powers the "you can borrow up to NZ$X" UI. |
 
-> **[STATUS]** Live reads: ERC-20 `balanceOf` / `allowance` on underlying + aToken. Aave `getUserAccountData` is in the ABI (`packages/nextjs/contracts/abis/aaveSepolia.ts`) but **unused** by hooks yet. No custom APY getters — would come from Aave protocol data / reserve data when we build the dashboard.
+> **[STATUS]** Live reads: ERC-20 `balanceOf` / `allowance` on underlying + aToken + variable debt token; `Pool.getUserAccountData` for HF / available borrows. No custom APY getters — would come from Aave protocol data / reserve data when we build the dashboard.
 
 ### 4.6 MockOracle (this is a demo superpower — build it early)
 
@@ -371,8 +371,8 @@ maxBorrowNZD       = collateralValueNZD * LTV - currentDebtNZD
 | Approve | `underlying.approve(pool, amount)` — **exact amount**, not unlimited | Done (separate button) |
 | Supply | `Pool.supply(asset, amount, onBehalfOf, referralCode=0)` | Done |
 | Withdraw | `Pool.withdraw(asset, amount, to)` · full exit with `maxUint256` | Done |
-| Borrow / repay | Aave Pool APIs (not in current hook surface) | **Not started** |
-| Account health | `Pool.getUserAccountData(user)` (ABI present) | **Not started** |
+| Borrow / repay | `Pool.borrow` / `Pool.repay` (variable mode `2`; full repay with `maxUint256`) | Done (same-asset on `/aave` + `/mnzd`) |
+| Account health | `Pool.getUserAccountData(user)` + variable debt `balanceOf` | Done |
 
 **Registration:** `packages/nextjs/contracts/externalContracts.ts`  
 **Refresh hackathon addresses:** copy `reports/hackathon-market.json` from aave-v3-origin → `packages/nextjs/config/hackathon-market.json`, restart Next, run `yarn test:aave`.

@@ -23,6 +23,10 @@ if (!hackathonMarket.aToken || !isAddress(hackathonMarket.aToken)) {
   throw new Error("hackathon-market.json: aToken is missing or invalid.");
 }
 
+if (!hackathonMarket.variableDebtToken || !isAddress(hackathonMarket.variableDebtToken)) {
+  throw new Error("hackathon-market.json: variableDebtToken is missing or invalid.");
+}
+
 if (typeof hackathonMarket.underlying.decimals !== "number" || hackathonMarket.underlying.decimals <= 0) {
   throw new Error("hackathon-market.json: underlying.decimals is missing or invalid.");
 }
@@ -51,6 +55,7 @@ export const aaveHackathonMnzdConfig = {
     displaySymbol: "mNZD" as const,
     underlyingAddress: hackathonMarket.underlying.address as Address,
     aTokenAddress: hackathonMarket.aToken as Address,
+    variableDebtTokenAddress: hackathonMarket.variableDebtToken as Address,
     decimals: hackathonMarket.underlying.decimals,
   },
 } as const;

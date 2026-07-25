@@ -21,8 +21,10 @@ A second Sepolia lending UI for the **custom** Aave V3 market deployed from [aav
 3. **Approve** the hackathon Pool for an exact amount
 4. **Supply** → read aToken balance
 5. **Withdraw** partial or full (`maxUint256`)
+6. **Borrow** mNZD against supplied mNZD (variable rate) → read variable debt + health factor
+7. **Repay** partial or full (`maxUint256`) — approve first when allowance is insufficient
 
-Approve and supply stay as two separate wallet confirmations.
+Approve and supply/repay stay as two separate wallet confirmations. Shared UI: `AaveMarketPanel` (same layout as `/aave`).
 
 ## Debug Contracts
 
@@ -31,8 +33,9 @@ Registered under Sepolia as:
 - `HackathonPool`
 - `HackathonMnzd`
 - `HackathonAToken`
+- `HackathonVariableDebt`
 
-Official EURS contracts (`AaveV3Pool`, `SepoliaEURS`, `AaveSepoliaAToken`) remain available as separate Debug tabs.
+Official EURS contracts (`AaveV3Pool`, `SepoliaEURS`, `AaveSepoliaAToken`, `AaveSepoliaVariableDebt`) remain available as separate Debug tabs.
 
 ## Refreshing addresses after redeploy
 

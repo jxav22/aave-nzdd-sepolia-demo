@@ -1,21 +1,28 @@
 import { useCallback, useMemo, useState } from "react";
-import { formatUnits } from "viem";
+import { formatUnits, maxUint256 } from "viem";
 import { useAccount, useSwitchChain } from "wagmi";
 import { aaveSepoliaConfig } from "~~/config/aaveSepolia";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import {
-  ParseAmountError,
+  REPAY_ALL_AMOUNT,
   WITHDRAW_ALL_AMOUNT,
   hasSufficientAllowance,
   hasSufficientBalance,
   parseTokenAmount,
 } from "~~/utils/aave/amount";
-import { getParsedError, notification } from "~~/utils/scaffold-eth";
+import { VARIABLE_INTEREST_RATE_MODE, mapAaveTxError } from "~~/utils/aave/errors";
+import { notification } from "~~/utils/scaffold-eth";
 
 export type AaveSepoliaState = {
   walletBalance: bigint;
   suppliedBalance: bigint;
+  borrowedBalance: bigint;
   allowance: bigint;
+  totalCollateralBase: bigint;
+  totalDebtBase: bigint;
+  availableBorrowsBase: bigint;
+  ltv: bigint;
+  healthFactor: bigint;
   decimals: number;
   symbol: string;
   isCorrectNetwork: boolean;
@@ -24,6 +31,8 @@ export type AaveSepoliaState = {
   isApproving: boolean;
   isSupplying: boolean;
   isWithdrawing: boolean;
+  isBorrowing: boolean;
+  isRepaying: boolean;
   decimalsMismatch?: string;
   error?: string;
 };
@@ -33,6 +42,9 @@ export type AaveSepoliaActions = {
   supply: (amount: string) => Promise<void>;
   withdraw: (amount: string) => Promise<void>;
   withdrawAll: () => Promise<void>;
+  borrow: (amount: string) => Promise<void>;
+  repay: (amount: string) => Promise<void>;
+  repayAll: () => Promise<void>;
   refresh: () => Promise<void>;
   switchToSepolia: () => Promise<void>;
 };
@@ -46,24 +58,13 @@ export type UseAaveSepoliaReturn = AaveSepoliaActions & {
 const ZERO = 0n;
 
 function mapTxError(error: unknown, fallback: string): string {
-  if (error instanceof ParseAmountError) {
-    return error.message;
-  }
-
-  const message = getParsedError(error);
-  const lower = message.toLowerCase();
-
-  if (lower.includes("user rejected") || lower.includes("user denied") || lower.includes("rejected the request")) {
-    return "Transaction rejected in wallet.";
-  }
-
-  return message || fallback;
+  return mapAaveTxError(error, fallback);
 }
 
 /**
- * Reusable Aave V3 Sepolia integration hook.
+ * Reusable Aave V3 Sepolia integration hook (EURS same-asset supply / borrow).
  *
- * Approve and supply are separate confirmed transactions — supply never auto-runs after approve.
+ * Approve and supply/repay are separate confirmed transactions — never auto-chained.
  */
 export function useAaveSepolia(): UseAaveSepoliaReturn {
   const { address, chainId, isConnected } = useAccount();
@@ -73,6 +74,8 @@ export function useAaveSepolia(): UseAaveSepoliaReturn {
   const [isApproving, setIsApproving] = useState(false);
   const [isSupplying, setIsSupplying] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isBorrowing, setIsBorrowing] = useState(false);
+  const [isRepaying, setIsRepaying] = useState(false);
 
   const isCorrectNetwork = isConnected && chainId === aaveSepoliaConfig.chainId;
   const enabled = Boolean(address) && isCorrectNetwork;
@@ -130,6 +133,28 @@ export function useAaveSepolia(): UseAaveSepoliaReturn {
     query: { enabled },
   });
 
+  const {
+    data: borrowedBalance,
+    isLoading: isLoadingBorrowed,
+    refetch: refetchBorrowed,
+  } = useScaffoldReadContract({
+    contractName: "AaveSepoliaVariableDebt",
+    functionName: "balanceOf",
+    args: [address],
+    query: { enabled },
+  });
+
+  const {
+    data: accountData,
+    isLoading: isLoadingAccount,
+    refetch: refetchAccount,
+  } = useScaffoldReadContract({
+    contractName: "AaveV3Pool",
+    functionName: "getUserAccountData",
+    args: [address],
+    query: { enabled },
+  });
+
   const { writeContractAsync: writeUnderlyingAsync } = useScaffoldWriteContract({
     contractName: "SepoliaEURS",
   });
@@ -147,8 +172,24 @@ export function useAaveSepolia(): UseAaveSepoliaReturn {
       : undefined;
 
   const refresh = useCallback(async () => {
-    await Promise.all([refetchBalance(), refetchAllowance(), refetchSupplied(), refetchDecimals(), refetchSymbol()]);
-  }, [refetchAllowance, refetchBalance, refetchDecimals, refetchSupplied, refetchSymbol]);
+    await Promise.all([
+      refetchBalance(),
+      refetchAllowance(),
+      refetchSupplied(),
+      refetchBorrowed(),
+      refetchAccount(),
+      refetchDecimals(),
+      refetchSymbol(),
+    ]);
+  }, [
+    refetchAccount,
+    refetchAllowance,
+    refetchBalance,
+    refetchBorrowed,
+    refetchDecimals,
+    refetchSupplied,
+    refetchSymbol,
+  ]);
 
   const requireWalletAndNetwork = useCallback(() => {
     if (!isConnected || !address) {
@@ -324,6 +365,135 @@ export function useAaveSepolia(): UseAaveSepoliaReturn {
     }
   }, [refresh, requireWalletAndNetwork, suppliedBalance, symbol, writePoolAsync]);
 
+  const borrow = useCallback(
+    async (amount: string) => {
+      setError(undefined);
+      setIsBorrowing(true);
+      try {
+        const user = requireWalletAndNetwork();
+        const parsed = parseTokenAmount(amount, decimals);
+
+        const txHash = await writePoolAsync({
+          functionName: "borrow",
+          args: [aaveSepoliaConfig.asset.underlyingAddress, parsed, VARIABLE_INTEREST_RATE_MODE, 0, user],
+        });
+
+        if (!txHash) {
+          throw new Error("Borrow transaction was not submitted.");
+        }
+
+        await refresh();
+        notification.success(`Borrowed ${amount} ${symbol} from Aave.`);
+      } catch (e) {
+        const message = mapTxError(
+          e,
+          "Borrow failed. Supply collateral first, keep health factor above 1, and ensure the reserve has liquidity.",
+        );
+        setError(message);
+        notification.error(message);
+        throw e;
+      } finally {
+        setIsBorrowing(false);
+      }
+    },
+    [decimals, refresh, requireWalletAndNetwork, symbol, writePoolAsync],
+  );
+
+  const repay = useCallback(
+    async (amount: string) => {
+      setError(undefined);
+      setIsRepaying(true);
+      try {
+        const user = requireWalletAndNetwork();
+        const parsed = parseTokenAmount(amount, decimals);
+        const debt = borrowedBalance ?? ZERO;
+        const balance = walletBalance ?? ZERO;
+        const currentAllowance = allowance ?? ZERO;
+
+        if (debt <= ZERO) {
+          throw new Error("No outstanding debt to repay.");
+        }
+
+        if (!hasSufficientBalance(parsed, balance)) {
+          throw new Error(`Insufficient wallet ${symbol} balance to repay.`);
+        }
+
+        if (!hasSufficientAllowance(parsed, currentAllowance)) {
+          throw new Error(
+            "Insufficient allowance. Approve the Aave Pool for this amount first (separate transaction).",
+          );
+        }
+
+        const txHash = await writePoolAsync({
+          functionName: "repay",
+          args: [aaveSepoliaConfig.asset.underlyingAddress, parsed, VARIABLE_INTEREST_RATE_MODE, user],
+        });
+
+        if (!txHash) {
+          throw new Error("Repay transaction was not submitted.");
+        }
+
+        await refresh();
+        notification.success(`Repaid ${amount} ${symbol} to Aave.`);
+      } catch (e) {
+        const message = mapTxError(e, "Repay failed.");
+        setError(message);
+        notification.error(message);
+        throw e;
+      } finally {
+        setIsRepaying(false);
+      }
+    },
+    [allowance, borrowedBalance, decimals, refresh, requireWalletAndNetwork, symbol, walletBalance, writePoolAsync],
+  );
+
+  const repayAll = useCallback(async () => {
+    setError(undefined);
+    setIsRepaying(true);
+    try {
+      const user = requireWalletAndNetwork();
+      const debt = borrowedBalance ?? ZERO;
+      const balance = walletBalance ?? ZERO;
+      const currentAllowance = allowance ?? ZERO;
+
+      if (debt <= ZERO) {
+        throw new Error("No outstanding debt to repay.");
+      }
+
+      // Exact approve must cover current debt; interest may accrue slightly before inclusion.
+      if (!hasSufficientBalance(debt, balance)) {
+        throw new Error(
+          `Insufficient wallet ${symbol} balance to repay the full debt (${formatUnits(debt, decimals)}).`,
+        );
+      }
+
+      if (!hasSufficientAllowance(debt, currentAllowance)) {
+        throw new Error(
+          `Insufficient allowance. Approve at least ${formatUnits(debt, decimals)} ${symbol} for the Aave Pool first (separate transaction).`,
+        );
+      }
+
+      const txHash = await writePoolAsync({
+        functionName: "repay",
+        args: [aaveSepoliaConfig.asset.underlyingAddress, REPAY_ALL_AMOUNT, VARIABLE_INTEREST_RATE_MODE, user],
+      });
+
+      if (!txHash) {
+        throw new Error("Repay-all transaction was not submitted.");
+      }
+
+      await refresh();
+      notification.success(`Repaid full ${symbol} debt on Aave.`);
+    } catch (e) {
+      const message = mapTxError(e, "Repay-all failed.");
+      setError(message);
+      notification.error(message);
+      throw e;
+    } finally {
+      setIsRepaying(false);
+    }
+  }, [allowance, borrowedBalance, decimals, refresh, requireWalletAndNetwork, symbol, walletBalance, writePoolAsync]);
+
   const formatAmount = useCallback(
     (value: bigint) => {
       try {
@@ -339,31 +509,53 @@ export function useAaveSepolia(): UseAaveSepoliaReturn {
     () => ({
       walletBalance: walletBalance ?? ZERO,
       suppliedBalance: suppliedBalance ?? ZERO,
+      borrowedBalance: borrowedBalance ?? ZERO,
       allowance: allowance ?? ZERO,
+      // getUserAccountData returns a tuple: collateral, debt, availableBorrows, liqThreshold, ltv, healthFactor
+      totalCollateralBase: accountData?.[0] ?? ZERO,
+      totalDebtBase: accountData?.[1] ?? ZERO,
+      availableBorrowsBase: accountData?.[2] ?? ZERO,
+      ltv: accountData?.[4] ?? ZERO,
+      healthFactor: accountData?.[5] ?? maxUint256,
       decimals,
       symbol,
       isCorrectNetwork: Boolean(isCorrectNetwork),
       isConnected,
-      isReading: isLoadingBalance || isLoadingAllowance || isLoadingSupplied || isLoadingDecimals || isLoadingSymbol,
+      isReading:
+        isLoadingBalance ||
+        isLoadingAllowance ||
+        isLoadingSupplied ||
+        isLoadingBorrowed ||
+        isLoadingAccount ||
+        isLoadingDecimals ||
+        isLoadingSymbol,
       isApproving,
       isSupplying,
       isWithdrawing,
+      isBorrowing,
+      isRepaying,
       decimalsMismatch,
       error,
     }),
     [
+      accountData,
       allowance,
+      borrowedBalance,
       decimals,
       decimalsMismatch,
       error,
       isApproving,
+      isBorrowing,
       isConnected,
       isCorrectNetwork,
+      isLoadingAccount,
       isLoadingAllowance,
       isLoadingBalance,
+      isLoadingBorrowed,
       isLoadingDecimals,
       isLoadingSupplied,
       isLoadingSymbol,
+      isRepaying,
       isSupplying,
       isWithdrawing,
       suppliedBalance,
@@ -379,6 +571,9 @@ export function useAaveSepolia(): UseAaveSepoliaReturn {
     supply,
     withdraw,
     withdrawAll,
+    borrow,
+    repay,
+    repayAll,
     refresh,
     switchToSepolia,
     formatAmount,

@@ -22,6 +22,10 @@ const externalContracts = {
       address: aaveSepoliaConfig.asset.aTokenAddress,
       abi: aTokenAbi,
     },
+    AaveSepoliaVariableDebt: {
+      address: aaveSepoliaConfig.asset.variableDebtTokenAddress,
+      abi: aTokenAbi,
+    },
     HackathonPool: {
       address: aaveHackathonMnzdConfig.poolAddress,
       abi: aaveV3PoolAbi,
@@ -32,6 +36,10 @@ const externalContracts = {
     },
     HackathonAToken: {
       address: aaveHackathonMnzdConfig.asset.aTokenAddress,
+      abi: aTokenAbi,
+    },
+    HackathonVariableDebt: {
+      address: aaveHackathonMnzdConfig.asset.variableDebtTokenAddress,
       abi: aTokenAbi,
     },
   },
