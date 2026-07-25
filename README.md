@@ -74,8 +74,9 @@ Run smart contract test with `yarn hardhat:test`
 This repo’s primary demo is a **custom Aave V3 market on Ethereum Sepolia** with **wETH**, **wBTC**, and **dNZD** (mock NZD stable).
 
 - **Demo UI:** `/mnzd` (nav: Hackathon Market) after `yarn start`
+- **New to the project?** Start with [docs/HANDOVER.md](docs/HANDOVER.md) — verified live state, blockers, and the path from prototype to product
 - **Docs:** [docs/AAVE_HACKATHON_MNZD.md](docs/AAVE_HACKATHON_MNZD.md)
-- **Build status:** [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
+- **Build status:** [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md) — note: stale on addresses, see HANDOVER §3
 
 Get wETH by wrapping Sepolia ETH (or Supply ETH via WrappedTokenGateway). Mint wBTC/dNZD with the token-owner faucet on the page.
 
