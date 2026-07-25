@@ -95,8 +95,10 @@ export const EarnPanel = ({
 
     if (ok) {
       setDepositAmount("");
-      onRefresh();
     }
+    // Refresh even when the sequence stopped early: an approval that already went through
+    // has changed the allowance, and a stale one would ask for a second needless signature.
+    onRefresh();
   };
 
   const runWithdraw = async (all: boolean) => {
@@ -112,8 +114,8 @@ export const EarnPanel = ({
 
     if (ok) {
       setWithdrawAmount("");
-      onRefresh();
     }
+    onRefresh();
   };
 
   return (
@@ -247,7 +249,7 @@ export const EarnPanel = ({
           </div>
         </Card>
 
-        <Card className="bg-[var(--pine-deep)] text-[var(--cream)]">
+        <Card tone="deep">
           <Eyebrow className="text-[var(--moss)]">Where the interest comes from</Eyebrow>
           <p className="mt-3 text-sm leading-relaxed text-[var(--cream)]/80">
             Everyone borrowing New Zealand dollars pays interest, and it is shared among the people who deposited them.

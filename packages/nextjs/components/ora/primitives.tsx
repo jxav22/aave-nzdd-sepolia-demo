@@ -7,15 +7,29 @@ export const Eyebrow = ({ children, className = "" }: { children: ReactNode; cla
   </span>
 );
 
+/**
+ * `deep` is the inverted card: cream text on pine. It is a tone rather than something a caller
+ * layers on with `className`, because a `bg-*` passed that way competes with the default
+ * `bg-card` on equal specificity and loses, which silently leaves light text on a light card.
+ */
+type CardTone = "default" | "deep";
+
+const CARD_TONE: Record<CardTone, string> = {
+  default: "border-border bg-card",
+  deep: "border-[var(--pine)]/40 bg-[var(--pine-deep)] text-[var(--cream)]",
+};
+
 export const Card = ({
   children,
   className = "",
+  tone = "default",
   as: Tag = "div",
 }: {
   children: ReactNode;
   className?: string;
+  tone?: CardTone;
   as?: "div" | "section" | "form";
-}) => <Tag className={`rounded-2xl border border-border bg-card p-6 shadow-card ${className}`}>{children}</Tag>;
+}) => <Tag className={`rounded-2xl border p-6 shadow-card ${CARD_TONE[tone]} ${className}`}>{children}</Tag>;
 
 export const Stat = ({
   label,
