@@ -27,6 +27,8 @@ type AddressInfoDropdownProps = {
   blockExplorerAddressLink: string | undefined;
   displayName: string;
   ensAvatar?: string;
+  /** Override wagmi disconnect (e.g. Privy logout + clear server session). */
+  onDisconnect?: () => void | Promise<void>;
 };
 
 export const AddressInfoDropdown = ({
@@ -34,6 +36,7 @@ export const AddressInfoDropdown = ({
   ensAvatar,
   displayName,
   blockExplorerAddressLink,
+  onDisconnect,
 }: AddressInfoDropdownProps) => {
   const { disconnect } = useDisconnect();
   const { connector } = useAccount();
@@ -125,7 +128,13 @@ export const AddressInfoDropdown = ({
             <button
               className="menu-item text-error h-8 btn-sm flex gap-3 py-3"
               type="button"
-              onClick={() => disconnect()}
+              onClick={() => {
+                if (onDisconnect) {
+                  void onDisconnect();
+                  return;
+                }
+                disconnect();
+              }}
             >
               <ArrowLeftOnRectangleIcon className="h-6 w-4 ml-2 sm:ml-0" /> <span>Disconnect</span>
             </button>

@@ -12,8 +12,10 @@ import {
   CpuChipIcon,
   CurrencyDollarIcon,
 } from "@heroicons/react/24/outline";
+import { PrivyAuthButton } from "~~/components/PrivyAuthButton";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
+import { isPrivyEnabled } from "~~/utils/auth/isPrivyEnabled";
 
 type HeaderMenuLink = {
   label: string;
@@ -127,7 +129,7 @@ export const Header = () => {
         </ul>
       </div>
       <div className="navbar-end grow mr-4">
-        <RainbowKitCustomConnectButton />
+        {isPrivyEnabled ? <PrivyAuthButton /> : <RainbowKitCustomConnectButton />}
         {isLocalNetwork && <FaucetButton />}
       </div>
     </div>

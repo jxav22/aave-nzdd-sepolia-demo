@@ -418,7 +418,7 @@ What is prototype-only:
 | **Home page is stock Scaffold-ETH** | `app/page.tsx` is untouched boilerplate. First impression is "someone's demo repo" |
 | **Two-transaction Earn** | Approve then supply, both user-confirmed, no sequencing UI. At minimum, sequence them behind one button with clear progress. EIP-5792 batching is an option — there is a vendored skill for it |
 | **No APY or utilisation anywhere** | See §7 |
-| **No onboarding** | RainbowKit only. No email login, no embedded wallet, no gas sponsorship. A user needs a wallet, Sepolia ETH, and someone to mint them dNZD |
+| **Onboarding / gas** | Privy email + wallet + social login is implemented when `NEXT_PUBLIC_PRIVY_APP_ID` is set (embedded wallets + iron-session). Without it, RainbowKit remains. Gas sponsorship still not implemented. Users still need Sepolia ETH and someone to mint dNZD |
 | **No error recovery UX** | `utils/aave/errors.ts` maps Aave revert codes to messages, which is good, but there is no guided recovery |
 | **No mobile design pass** | DaisyUI responsive defaults only |
 | **No analytics or telemetry** | Nothing measures whether anyone completes a flow |
@@ -472,12 +472,25 @@ yarn install
 #   ALCHEMY_API_KEY=...
 #   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=...
 #   OPENAI_API_KEY=...   # only for /binance-chat
+#   # Production auth (optional locally; required for Privy on deploy):
+#   NEXT_PUBLIC_PRIVY_APP_ID=...
+#   PRIVY_APP_SECRET=...
+#   IRON_SESSION_SECRET=...   # 32+ chars
 yarn start                       # → http://localhost:3000/mnzd
 ```
 
 Defaults for the Alchemy key and WalletConnect project ID are committed in
 `scaffold.config.ts`, so it runs without `.env.local` — but they are shared and rate-limited.
 Get your own.
+
+**Privy Dashboard (when enabling production auth):** create an app at
+[dashboard.privy.io](https://dashboard.privy.io); enable Email, Wallet, Google, Apple, Twitter/X;
+allow `localhost:3000` and the production domain; enable Ethereum embedded wallets. With
+`NEXT_PUBLIC_PRIVY_APP_ID` set, the header uses Privy Sign in (not RainbowKit). Server session is
+`POST/GET/DELETE /api/auth/session` (Privy JWT → iron-session cookie).
+
+`NEXT_PUBLIC_PRIVY_APP_ID` is inlined at **build time** — set it on Vercel before
+`yarn vercel:yolo --prod`, not only as a runtime secret after the build.
 
 **Do not run `yarn chain` or `yarn deploy`.** They only touch the boilerplate Hardhat contract.
 

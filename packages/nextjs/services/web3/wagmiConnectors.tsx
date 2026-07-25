@@ -37,11 +37,12 @@ export const wagmiConnectors = () => {
     return [];
   }
 
+  // burner-connector may nest a different RainbowKit version after wagmi/viem bumps
   return connectorsForWallets(
     [
       {
         groupName: "Supported Wallets",
-        wallets,
+        wallets: wallets as Parameters<typeof connectorsForWallets>[0][number]["wallets"],
       },
     ],
 

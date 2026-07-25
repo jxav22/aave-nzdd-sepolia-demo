@@ -42,7 +42,7 @@ A **NZD-denominated savings & lending prototype** for New Zealand users, demonst
 | Same-asset borrow (EURS against EURS, official market) | Implemented; read-only smoke only |
 | **wETH / wBTC reserves** | **Done** — listed, active, collateral + borrow enabled; admin has supplied crypto collateral **[Verified]** |
 | **wETH/ETH collateral → borrow dNZD** | **Blocked on dNZD pool liquidity = 0**; UI and market config ready; also blocked for *pitch numbers* by dNZD USD mispricing (§2) |
-| Email login / embedded wallet / gas sponsorship | **Not implemented** (RainbowKit remains) |
+| Email login / embedded wallet | **Implemented** via Privy when `NEXT_PUBLIC_PRIVY_APP_ID` is set (email + wallet + socials → embedded wallet + iron-session). RainbowKit fallback without Privy env. Gas sponsorship still **not implemented** |
 | Real NewMoney dNZD / NZDD / zNZD | **Not used** — asset is **dNZD** (demo stand-in, 6 decimals, owner-mintable) |
 | Official Aave mainnet listing | **Not claimed** |
 
@@ -164,7 +164,7 @@ At last HANDOVER read: **0 dNZD** in the pool; **1 wETH + 100 wBTC** supplied by
 | :--- | :--- |
 | Architecture | Frontend + public API over two Aave V3 markets. No custom `LendingPool` in this repo. |
 | Hardhat | Stock `YourContract` only. `deployedContracts.ts` is `{}`. |
-| Wallet | RainbowKit. No Privy. |
+| Wallet / auth | Privy (email, wallet, socials + embedded wallets + `/api/auth/session`) when configured; else RainbowKit. |
 | Primary UI | Technical panels on `/mnzd` via `AaveMarketPanel` + `BorrowRiskAssistant`. |
 | Risk / API | Deterministic stress engine + `/api/v1` (see [API.md](./API.md)). |
 | Tests | `yarn test:aave`; `yarn risk:smoke`; opt-in `yarn aave:e2e`. |
@@ -198,7 +198,8 @@ flowchart TB
 | NZD-referenced oracle pricing | **Not implemented** | §2.3 |
 | Reserve APY / utilisation UI | Not implemented | No `getReserveData` in UI |
 | One-button Earn (approve→supply UX) | Not implemented | Two confirms by design |
-| Privy / gas sponsorship | Not implemented | |
+| Privy auth / embedded wallets | Done (env-gated) | Gas sponsorship still open |
+| Gas sponsorship | Not implemented | |
 | Indexer / dashboard | Not implemented | Events exist on Pool |
 | Borrow Risk Assistant + public API | Done | Most product-ready surface |
 | Custom Hardhat LendingPool | **Superseded** | Never built here |
@@ -293,7 +294,7 @@ Wrapping ETH ≠ listing wETH.
 
 ### P2 — differentiators
 
-1. Privy / embedded wallet + gas sponsorship.
+1. Gas sponsorship on Privy embedded wallets.
 2. Ponder (or subgraph) indexer + dashboard.
 3. Position monitoring / HF alerts (extend risk engine).
 4. Liquidation demo (harder with live Chainlink — no free mock setter on crypto).

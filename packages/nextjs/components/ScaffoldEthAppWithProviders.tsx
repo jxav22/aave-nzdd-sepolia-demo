@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PrivyProvider } from "@privy-io/react-auth";
+import { WagmiProvider as PrivyWagmiProvider } from "@privy-io/wagmi";
 import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
@@ -10,7 +12,10 @@ import { WagmiProvider } from "wagmi";
 import { Footer } from "~~/components/Footer";
 import { Header } from "~~/components/Header";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
+import { AuthSessionSync } from "~~/hooks/useAuthSession";
+import { privyConfig } from "~~/services/web3/privyConfig";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
+import { isPrivyEnabled } from "~~/utils/auth/isPrivyEnabled";
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -33,7 +38,7 @@ export const queryClient = new QueryClient({
   },
 });
 
-export const ScaffoldEthAppWithProviders = ({ children }: { children: React.ReactNode }) => {
+const RainbowKitAppProviders = ({ children }: { children: React.ReactNode }) => {
   const { resolvedTheme } = useTheme();
   const isDarkMode = resolvedTheme === "dark";
   const [mounted, setMounted] = useState(false);
@@ -55,4 +60,44 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
       </QueryClientProvider>
     </WagmiProvider>
   );
+};
+
+const PrivyAppProviders = ({ children }: { children: React.ReactNode }) => {
+  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
+  const { resolvedTheme } = useTheme();
+  const isDarkMode = resolvedTheme === "dark";
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return (
+    <PrivyProvider
+      appId={appId}
+      config={{
+        ...privyConfig,
+        appearance: {
+          ...privyConfig.appearance,
+          theme: mounted && isDarkMode ? "dark" : "light",
+        },
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <PrivyWagmiProvider config={wagmiConfig}>
+          <AuthSessionSync />
+          <ProgressBar height="3px" color="#2299dd" />
+          <ScaffoldEthApp>{children}</ScaffoldEthApp>
+        </PrivyWagmiProvider>
+      </QueryClientProvider>
+    </PrivyProvider>
+  );
+};
+
+export const ScaffoldEthAppWithProviders = ({ children }: { children: React.ReactNode }) => {
+  if (isPrivyEnabled) {
+    return <PrivyAppProviders>{children}</PrivyAppProviders>;
+  }
+
+  return <RainbowKitAppProviders>{children}</RainbowKitAppProviders>;
 };
