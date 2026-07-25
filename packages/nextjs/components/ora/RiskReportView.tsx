@@ -2,7 +2,6 @@
 
 import { DataRow, Eyebrow, Note, Stat } from "~~/components/ora/primitives";
 import type { BorrowRiskReport } from "~~/services/risk/assistant";
-import { BASE_CURRENCY } from "~~/utils/format/money";
 
 /**
  * Shared renderer for a borrow risk report.
@@ -164,8 +163,12 @@ export const MarketContextLine = ({ report }: { report: BorrowRiskReport }) => {
   return (
     <div>
       <p className="text-sm leading-relaxed text-muted-foreground">
-        ETH is trading around {BASE_CURRENCY.symbol}
-        {context.ethPriceUsd?.toFixed(2)}
+        {/*
+          Attributed and labelled US$ on purpose. This is the exchange price, which is quoted
+          against the US dollar, while the market's own oracle is denominated in NZD. They are
+          genuinely different currencies, so the source is named to make that legible.
+        */}
+        On Binance, ETH is trading around US${context.ethPriceUsd?.toFixed(2)}
         {context.change24hPercent !== null ? `, ${context.change24hPercent}% over the last day` : ""}. Day to day it has
         moved about {context.dailyVolatilityPercent}%, and its deepest fall in the last 30 days was{" "}
         {Math.abs(context.maxDrawdown30dPercent)}%.

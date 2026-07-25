@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Address } from "viem";
 import type { BorrowRiskReport } from "~~/services/risk/assistant";
-import { BASE_CURRENCY } from "~~/utils/format/money";
 
 /**
  * Borrow Risk Assistant panel.
@@ -169,9 +168,9 @@ export const BorrowRiskAssistant = ({ address, amount, onUseAmount, isCorrectNet
               </p>
             ) : (
               <p className="opacity-80">
-                ETH is trading around {BASE_CURRENCY.symbol}
-                {data.marketContext.ethPriceUsd?.toFixed(2)} ({data.marketContext.change24hPercent}% over 24h). Daily
-                movement has averaged {data.marketContext.dailyVolatilityPercent}% with a deepest 30-day fall of{" "}
+                On Binance, ETH is trading around US${data.marketContext.ethPriceUsd?.toFixed(2)} (
+                {data.marketContext.change24hPercent}% over 24h). Daily movement has averaged{" "}
+                {data.marketContext.dailyVolatilityPercent}% with a deepest 30-day fall of{" "}
                 {Math.abs(data.marketContext.maxDrawdown30dPercent)}% across {data.marketContext.candleCount} candles.
               </p>
             )}

@@ -65,9 +65,7 @@ const StepRow = ({
           {done ? " · Done" : locked ? " · After step 1" : null}
         </Eyebrow>
         <div className="mt-1 text-sm font-medium text-foreground">{title}</div>
-        {description ? (
-          <div className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</div>
-        ) : null}
+        {description ? <div className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</div> : null}
         <div className="mt-3 flex flex-wrap items-center gap-3">{action}</div>
       </div>
     </div>

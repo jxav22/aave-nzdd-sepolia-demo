@@ -143,8 +143,7 @@ export const BorrowPanel = ({
     }
   })();
 
-  const canDepositCollateral =
-    Boolean(collateralAmount.trim()) && !collateralError && positions.isCorrectNetwork;
+  const canDepositCollateral = Boolean(collateralAmount.trim()) && !collateralError && positions.isCorrectNetwork;
 
   const runApproveCollateral = async () => {
     const amount = collateralAmount;
