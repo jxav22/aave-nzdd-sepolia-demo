@@ -2,9 +2,11 @@ import { aaveHackathonMnzdConfig } from "~~/config/aaveHackathonMnzd";
 import { aaveSepoliaConfig } from "~~/config/aaveSepolia";
 import {
   aTokenAbi,
+  aaveOracleAbi,
   aaveV3PoolAbi,
   erc20Abi,
   mintableErc20Abi,
+  protocolDataProviderAbi,
   weth9Abi,
   wrappedTokenGatewayAbi,
 } from "~~/contracts/abis/aaveSepolia";
@@ -86,6 +88,14 @@ const externalContracts = {
     HackathonWrappedTokenGateway: {
       address: aaveHackathonMnzdConfig.wrappedTokenGateway,
       abi: wrappedTokenGatewayAbi,
+    },
+    HackathonDataProvider: {
+      address: aaveHackathonMnzdConfig.protocolDataProvider,
+      abi: protocolDataProviderAbi,
+    },
+    HackathonOracle: {
+      address: aaveHackathonMnzdConfig.aaveOracle,
+      abi: aaveOracleAbi,
     },
   },
 } as const;
