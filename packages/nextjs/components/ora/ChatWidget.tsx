@@ -62,6 +62,8 @@ export const ChatWidget = () => {
   };
 
   const disabled = isSending || configured === false;
+  // Three reads as a set of examples without turning the panel into a menu.
+  const visibleSuggestions = suggestions.slice(0, 3);
 
   return (
     <>
@@ -79,14 +81,17 @@ export const ChatWidget = () => {
         {open ? <XMarkIcon className="h-6 w-6" /> : <ChatBubbleOvalLeftEllipsisIcon className="h-6 w-6" aria-hidden />}
       </button>
 
-      {/* Panel */}
+      {/*
+        Panel. The height cap leaves 11rem clear: 6rem down to the launcher, 4rem for the sticky
+        header, and a little room between the two so the panel never sits on top of the header.
+      */}
       {open ? (
         <div
           id="ora-assistant"
           ref={panelRef}
           role="dialog"
           aria-label="Ora assistant"
-          className="fixed bottom-24 right-5 z-50 flex max-h-[min(34rem,calc(100vh-8rem))] w-[min(24rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_70px_-24px_rgba(20,40,30,0.45)]"
+          className="fixed bottom-24 right-5 z-50 flex max-h-[min(38rem,calc(100svh-11rem))] w-[min(24rem,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_24px_70px_-24px_rgba(20,40,30,0.45)]"
         >
           <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
             <div>
@@ -107,7 +112,7 @@ export const ChatWidget = () => {
             </button>
           </header>
 
-          <div className="flex-1 overflow-y-auto px-5 py-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 py-4">
             <ul className="flex flex-col gap-3">
               {messages.map(message => (
                 <li
@@ -131,7 +136,10 @@ export const ChatWidget = () => {
                       </summary>
                       <ul className="mt-1 flex flex-col gap-0.5">
                         {message.toolCalls.map((call, index) => (
-                          <li key={`${message.id}-${index}`} className="font-mono text-[10px] text-muted-foreground">
+                          <li
+                            key={`${message.id}-${index}`}
+                            className="font-mono text-[10px] break-all text-muted-foreground"
+                          >
                             {call.method} {call.path}{" "}
                             <span className={call.ok ? "" : "text-destructive"}>{call.status || "failed"}</span>
                           </li>
@@ -167,17 +175,32 @@ export const ChatWidget = () => {
             </p>
           ) : null}
 
-          {suggestions.length > 0 && configured !== false ? (
-            <div className="border-t border-border px-5 py-3">
-              {isFresh ? <Eyebrow>Try asking</Eyebrow> : <Eyebrow>Follow up</Eyebrow>}
-              <div className="mt-2 flex flex-wrap gap-2">
-                {suggestions.map(suggestion => (
+          {/*
+            An empty conversation has nothing to read, so the prompts can wrap and fill it. Once
+            there are messages the transcript is what matters, so follow-ups collapse to a single
+            row that scrolls sideways. Left to wrap, full-length questions stack several lines
+            deep and take half the panel away from the conversation.
+          */}
+          {visibleSuggestions.length > 0 && configured !== false ? (
+            <div className="shrink-0 border-t border-border px-5 py-3">
+              <Eyebrow>{isFresh ? "Try asking" : "Follow up"}</Eyebrow>
+              <div
+                className={
+                  isFresh
+                    ? "mt-2 flex max-h-[7.5rem] flex-wrap gap-2 overflow-y-auto"
+                    : "mt-2 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                }
+              >
+                {visibleSuggestions.map(suggestion => (
                   <button
                     key={suggestion}
                     type="button"
                     disabled={disabled}
+                    title={suggestion}
                     onClick={() => void send(suggestion)}
-                    className="rounded-full border border-input px-3 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
+                    className={`rounded-full border border-input px-3 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50 ${
+                      isFresh ? "" : "max-w-[13rem] shrink-0 truncate"
+                    }`}
                   >
                     {suggestion}
                   </button>
