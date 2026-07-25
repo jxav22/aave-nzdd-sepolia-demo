@@ -1,51 +1,51 @@
-# Hackathon mNZD Market Integration
+# Hackathon Multi-Asset Market Integration
 
 ## What this is
 
-A second Sepolia lending UI for the **custom** Aave V3 market deployed from [aave-v3-origin](https://github.com/) (`DeployHackathonMarket`). It is separate from the official Aave Sepolia EURS flow at `/aave`.
+Sepolia lending UI for the **custom** Aave V3 market deployed from [aave-v3-origin](https://github.com/) (`DeployHackathonMarket` / `ListHackathonWethWbtc`).
 
 | Item | Value |
 |------|--------|
-| Route | [`/mnzd`](../packages/nextjs/app/mnzd/page.tsx) |
-| Hook | `useAaveHackathonMnzd` |
-| Asset | `mNZD` (Mock NZD Stable, **6 decimals**) |
+| Route | [`/mnzd`](../packages/nextjs/app/mnzd/page.tsx) (nav: **Hackathon Market**) |
+| Hook | `useAaveHackathonMnzd(selectedAsset)` |
+| Assets | **wETH**, **wBTC**, **dNZD** |
 | Config | [`packages/nextjs/config/hackathon-market.json`](../packages/nextjs/config/hackathon-market.json) |
 | Typed config | [`packages/nextjs/config/aaveHackathonMnzd.ts`](../packages/nextjs/config/aaveHackathonMnzd.ts) |
 
-**Not real NZDD / dNZD / zNZD.** Demo / hackathon only.
+**dNZD** is a demo NZD stable stand-in (6 decimals). **Not** production NewMoney issuance.
+
+The official Aave Sepolia EURS UI at `/aave` is **hidden from nav** for this demo (route kept for reference).
+
+## Assets and how to get them
+
+| Asset | Decimals | Acquisition |
+|-------|----------|-------------|
+| wETH | 18 | Wrap Sepolia ETH via `WETH9.deposit`, or `WrappedTokenGateway.depositETH` (wrap + supply) |
+| wBTC | 8 | Owner-only `mint` (TestnetERC20) |
+| dNZD | 6 | Owner-only `mint` (TestnetERC20) |
+
+Oracles are **mocks** (fixed demo prices). Do not treat them as live FX feeds.
 
 ## User flow
 
 1. Connect wallet on Ethereum Sepolia (`11155111`)
-2. **Mint** `mNZD` — only the token owner (deployer) can call `mint(address,uint256)`. The `/mnzd` page shows an owner faucet when the connected wallet is owner.
-3. **Approve** the hackathon Pool for an exact amount
-4. **Supply** → read aToken balance
-5. **Withdraw** partial or full (`maxUint256`)
-6. **Borrow** mNZD against supplied mNZD (variable rate) → read variable debt + health factor
-7. **Repay** partial or full (`maxUint256`) — approve first when allowance is insufficient
+2. **wETH tab:** wrap ETH → approve → supply (or one-click Supply ETH via gateway)
+3. Optionally mint/supply **wBTC**
+4. **dNZD tab:** mint (owner) / supply liquidity; **borrow dNZD** against wETH/wBTC collateral
+5. Repay / withdraw as needed
 
-Approve and supply/repay stay as two separate wallet confirmations. Shared UI: `AaveMarketPanel` (same layout as `/aave`).
+Approve and supply/repay stay as two separate wallet confirmations (except gateway `depositETH`). Shared UI: `AaveMarketPanel`.
 
 ## Debug Contracts
 
 Registered under Sepolia as:
 
 - `HackathonPool`
-- `HackathonMnzd`
-- `HackathonAToken`
-- `HackathonVariableDebt`
-
-Official EURS contracts (`AaveV3Pool`, `SepoliaEURS`, `AaveSepoliaAToken`, `AaveSepoliaVariableDebt`) remain available as separate Debug tabs.
+- `HackathonMnzd` / `HackathonWeth` / `HackathonWbtc`
+- `HackathonATokenMnzd` / `HackathonATokenWeth` / `HackathonATokenWbtc`
+- `HackathonDebtMnzd` / `HackathonDebtWeth` / `HackathonDebtWbtc`
+- `HackathonWrappedTokenGateway`
 
 ## Refreshing addresses after redeploy
 
-1. Copy the latest `reports/hackathon-market.json` from the aave-v3-origin deploy repo into `packages/nextjs/config/hackathon-market.json`
-2. Restart the Next.js app
-3. Run `yarn test:aave` to confirm config still resolves
-
-## Checks
-
-```bash
-yarn test:aave
-yarn next:check-types
-```
+Copy a fresh `reports/hackathon-market.json` from aave-v3-origin into `packages/nextjs/config/hackathon-market.json`, then restart the Next app.

@@ -1,6 +1,6 @@
 /**
  * Minimal ABIs for Aave V3 Pool, underlying ERC-20, aToken, and mintable testnet ERC-20.
- * Shared by the official Sepolia EURS market and the hackathon mNZD market.
+ * Shared by the official Sepolia EURS market and the hackathon dNZD market.
  * Kept small on purpose — do not pull full protocol ABIs.
  */
 
@@ -162,7 +162,7 @@ export const erc20Abi = [
   },
 ] as const;
 
-/** TestnetERC20 (Ownable) — used by hackathon mNZD for owner faucet minting. */
+/** TestnetERC20 (Ownable) — used by hackathon dNZD for owner faucet minting. */
 export const mintableErc20Abi = [
   {
     type: "function",
@@ -255,5 +255,57 @@ export const aTokenAbi = [
     stateMutability: "view",
     inputs: [],
     outputs: [{ name: "", type: "string" }],
+  },
+] as const;
+
+/** WETH9 — wrap/unwrap native ETH for the hackathon market. */
+export const weth9Abi = [
+  ...erc20Abi,
+  {
+    type: "function",
+    name: "deposit",
+    stateMutability: "payable",
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "withdraw",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "wad", type: "uint256" }],
+    outputs: [],
+  },
+] as const;
+
+/** Aave WrappedTokenGatewayV3 — depositETH wraps + supplies in one tx. */
+export const wrappedTokenGatewayAbi = [
+  {
+    type: "function",
+    name: "depositETH",
+    stateMutability: "payable",
+    inputs: [
+      { name: "", type: "address" },
+      { name: "onBehalfOf", type: "address" },
+      { name: "referralCode", type: "uint16" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "withdrawETH",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "", type: "address" },
+      { name: "amount", type: "uint256" },
+      { name: "to", type: "address" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "getWETHAddress",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
   },
 ] as const;

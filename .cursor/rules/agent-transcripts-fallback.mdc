@@ -1,0 +1,17 @@
+---
+description: Fall back to aave-v3-origin agent transcripts when not found here
+alwaysApply: true
+---
+
+# Agent transcript lookup
+
+When searching past conversation transcripts (agent transcripts):
+
+1. Search this project's transcripts first:
+   `C:\Users\jasxa\.cursor\projects\c-GitRepos-aave-nzdd-sepolia-demo\agent-transcripts`
+2. If nothing relevant is found, also search:
+   `C:\Users\jasxa\.cursor\projects\c-GitRepos-aave-v3-origin\agent-transcripts`
+
+Related work and prior context for this Aave / NZDD effort may live in the sibling repo `C:\GitRepos\aave-v3-origin` (Cursor project `c-GitRepos-aave-v3-origin`).
+
+When citing a transcript from either location, use the same format: cite as [<title>](<uuid excluding .jsonl>).

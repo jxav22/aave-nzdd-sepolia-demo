@@ -69,18 +69,17 @@ Run smart contract test with `yarn hardhat:test`
 - Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
 - Edit your deployment scripts in `packages/hardhat/deploy`
 
-## Aave V3 Sepolia
+## Aave V3 hackathon market (primary)
 
-This repo includes a minimal frontend integration with the **official Aave V3 market on Ethereum Sepolia** (test EURS; USDC is supply-capped on this market).
+This repo’s primary demo is a **custom Aave V3 market on Ethereum Sepolia** with **wETH**, **wBTC**, and **dNZD** (mock NZD stable).
 
-- **Web2 engineers:** start with [docs/WEB2_HANDOFF.md](docs/WEB2_HANDOFF.md) (concepts, day-1 run path, file map).
-- **Technical reference:** [docs/AAVE_SEPOLIA.md](docs/AAVE_SEPOLIA.md) (faucet details, `useAaveSepolia` hook API, limitations).
+- **Demo UI:** `/mnzd` (nav: Hackathon Market) after `yarn start`
+- **Docs:** [docs/AAVE_HACKATHON_MNZD.md](docs/AAVE_HACKATHON_MNZD.md)
+- **Build status:** [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
 
-Open the UI at `/aave` after `yarn start`. Required RPC env var: `ALCHEMY_API_KEY` in `packages/nextjs/.env.local`.
+Get wETH by wrapping Sepolia ETH (or Supply ETH via WrappedTokenGateway). Mint wBTC/dNZD with the token-owner faucet on the page.
 
-### Hackathon mNZD market
-
-A second tab at `/mnzd` talks to the custom Aave V3 + mNZD market deployed from aave-v3-origin (not official EURS). See [docs/AAVE_HACKATHON_MNZD.md](docs/AAVE_HACKATHON_MNZD.md).
+The official Aave Sepolia EURS reference at `/aave` is kept in code but **hidden from nav**. See [docs/AAVE_SEPOLIA.md](docs/AAVE_SEPOLIA.md). Required RPC env var: `ALCHEMY_API_KEY` in `packages/nextjs/.env.local`.
 
 ## Documentation
 

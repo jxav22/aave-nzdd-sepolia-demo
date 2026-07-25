@@ -1,12 +1,19 @@
 import { aaveHackathonMnzdConfig } from "~~/config/aaveHackathonMnzd";
 import { aaveSepoliaConfig } from "~~/config/aaveSepolia";
-import { aTokenAbi, aaveV3PoolAbi, erc20Abi, mintableErc20Abi } from "~~/contracts/abis/aaveSepolia";
+import {
+  aTokenAbi,
+  aaveV3PoolAbi,
+  erc20Abi,
+  mintableErc20Abi,
+  weth9Abi,
+  wrappedTokenGatewayAbi,
+} from "~~/contracts/abis/aaveSepolia";
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 /**
  * External Aave contracts for Scaffold-ETH hooks.
- * - Official Sepolia EURS market from `aaveSepoliaConfig`
- * - Hackathon mNZD market from `aaveHackathonMnzdConfig` (aave-v3-origin deploy)
+ * - Official Sepolia EURS market from `aaveSepoliaConfig` (reference / unlinked)
+ * - Hackathon multi-asset market from `aaveHackathonMnzdConfig`
  */
 const externalContracts = {
   [aaveSepoliaConfig.chainId]: {
@@ -31,16 +38,54 @@ const externalContracts = {
       abi: aaveV3PoolAbi,
     },
     HackathonMnzd: {
-      address: aaveHackathonMnzdConfig.asset.underlyingAddress,
+      address: aaveHackathonMnzdConfig.assets.dNZD.underlyingAddress,
       abi: mintableErc20Abi,
     },
-    HackathonAToken: {
-      address: aaveHackathonMnzdConfig.asset.aTokenAddress,
+    HackathonWeth: {
+      address: aaveHackathonMnzdConfig.assets.wETH.underlyingAddress,
+      abi: weth9Abi,
+    },
+    HackathonWbtc: {
+      address: aaveHackathonMnzdConfig.assets.wBTC.underlyingAddress,
+      abi: mintableErc20Abi,
+    },
+    HackathonATokenMnzd: {
+      address: aaveHackathonMnzdConfig.assets.dNZD.aTokenAddress,
       abi: aTokenAbi,
     },
-    HackathonVariableDebt: {
-      address: aaveHackathonMnzdConfig.asset.variableDebtTokenAddress,
+    HackathonATokenWeth: {
+      address: aaveHackathonMnzdConfig.assets.wETH.aTokenAddress,
       abi: aTokenAbi,
+    },
+    HackathonATokenWbtc: {
+      address: aaveHackathonMnzdConfig.assets.wBTC.aTokenAddress,
+      abi: aTokenAbi,
+    },
+    HackathonDebtMnzd: {
+      address: aaveHackathonMnzdConfig.assets.dNZD.variableDebtTokenAddress,
+      abi: aTokenAbi,
+    },
+    HackathonDebtWeth: {
+      address: aaveHackathonMnzdConfig.assets.wETH.variableDebtTokenAddress,
+      abi: aTokenAbi,
+    },
+    HackathonDebtWbtc: {
+      address: aaveHackathonMnzdConfig.assets.wBTC.variableDebtTokenAddress,
+      abi: aTokenAbi,
+    },
+    /** @deprecated Use HackathonATokenMnzd */
+    HackathonAToken: {
+      address: aaveHackathonMnzdConfig.assets.dNZD.aTokenAddress,
+      abi: aTokenAbi,
+    },
+    /** @deprecated Use HackathonDebtMnzd */
+    HackathonVariableDebt: {
+      address: aaveHackathonMnzdConfig.assets.dNZD.variableDebtTokenAddress,
+      abi: aTokenAbi,
+    },
+    HackathonWrappedTokenGateway: {
+      address: aaveHackathonMnzdConfig.wrappedTokenGateway,
+      abi: wrappedTokenGatewayAbi,
     },
   },
 } as const;

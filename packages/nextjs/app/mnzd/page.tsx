@@ -7,16 +7,23 @@ import type { Address as AddressType } from "viem";
 import { sepolia } from "viem/chains";
 import { useAccount } from "wagmi";
 import { AaveMarketPanel } from "~~/components/aave/AaveMarketPanel";
+import { type HackathonAssetSymbol, aaveHackathonMnzdConfig } from "~~/config/aaveHackathonMnzd";
 import { useAaveHackathonMnzd } from "~~/hooks/aave/useAaveHackathonMnzd";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth";
+
+const ASSET_TABS: HackathonAssetSymbol[] = ["wETH", "wBTC", "dNZD"];
 
 const MnzdPage: NextPage = () => {
   const { address } = useAccount();
   const { targetNetwork } = useTargetNetwork();
+  const [selectedAsset, setSelectedAsset] = useState<HackathonAssetSymbol>("wETH");
   const {
     state,
     config,
+    selectedAssetConfig,
     mint,
+    wrapEth,
+    supplyEth,
     approve,
     supply,
     withdraw,
@@ -27,10 +34,11 @@ const MnzdPage: NextPage = () => {
     refresh,
     switchToSepolia,
     formatAmount,
-  } = useAaveHackathonMnzd();
+  } = useAaveHackathonMnzd(selectedAsset);
   const [amount, setAmount] = useState("");
   const [mintAmount, setMintAmount] = useState("");
   const [mintTo, setMintTo] = useState("");
+  const [ethAmount, setEthAmount] = useState("");
 
   const explorerAddress = (addr: string) => `${config.explorerBaseUrl}/address/${addr}`;
   const isBusy =
@@ -39,24 +47,37 @@ const MnzdPage: NextPage = () => {
     state.isWithdrawing ||
     state.isBorrowing ||
     state.isRepaying ||
-    state.isMinting;
+    state.isMinting ||
+    state.isWrapping;
   const hasZeroWalletBalance = state.isConnected && state.isCorrectNetwork && state.walletBalance === 0n;
 
   return (
     <div className="flex flex-col items-center grow pt-8 pb-16 px-4">
       <div className="w-full max-w-2xl flex flex-col gap-6">
         <div>
-          <h1 className="text-3xl font-bold">mNZD Hackathon Market</h1>
+          <h1 className="text-3xl font-bold">Hackathon Market</h1>
           <p className="mt-2 text-sm opacity-80">{config.marketId}</p>
-          <p className="text-base font-medium">Custom Aave V3 Pool + mNZD on Ethereum Sepolia</p>
+          <p className="text-base font-medium">Custom Aave V3 — wETH, wBTC, and dNZD on Ethereum Sepolia</p>
           <p className="text-sm opacity-70 mt-1">
-            Deployed from aave-v3-origin. mNZD is a Mock NZD Stable stand-in (6 decimals) — not real NZDD, dNZD, or
-            zNZD. Same-asset supply and variable borrow. Separate from the official Aave Sepolia EURS market on{" "}
-            <a className="link" href="/aave">
-              /aave
-            </a>
-            .
+            Supply crypto collateral, borrow dNZD (demo NZD stable, 6 decimals — not production NewMoney issuance). Mock
+            oracles for demo pricing.
           </p>
+        </div>
+
+        <div className="bg-base-200 rounded-lg p-4 flex flex-col gap-3 text-sm">
+          <p className="font-semibold">Demo path</p>
+          <ol className="list-decimal list-inside flex flex-col gap-1 opacity-90">
+            <li>Get Sepolia ETH (any public faucet) for gas.</li>
+            <li>
+              <strong>wETH:</strong> wrap ETH (or supply ETH via Aave gateway), then supply as collateral.
+            </li>
+            <li>
+              <strong>wBTC / dNZD:</strong> owner-mint test tokens, then supply.
+            </li>
+            <li>
+              Switch to <strong>dNZD</strong> and borrow against your collateral (or same-asset dNZD).
+            </li>
+          </ol>
         </div>
 
         <div className="bg-base-200 rounded-lg p-4 flex flex-col gap-2">
@@ -85,58 +106,108 @@ const MnzdPage: NextPage = () => {
           )}
         </div>
 
+        <div role="tablist" className="tabs tabs-boxed bg-base-200 p-1">
+          {ASSET_TABS.map(symbol => (
+            <button
+              key={symbol}
+              role="tab"
+              type="button"
+              className={`tab flex-1 ${selectedAsset === symbol ? "tab-active" : ""}`}
+              onClick={() => {
+                setSelectedAsset(symbol);
+                setAmount("");
+                setMintAmount("");
+                setMintTo("");
+                setEthAmount("");
+              }}
+            >
+              {symbol}
+            </button>
+          ))}
+        </div>
+
         <div className="bg-base-200 rounded-lg p-4 flex flex-col gap-3 text-sm">
           <div className="flex flex-col gap-1">
-            <span className="font-semibold">Underlying token ({config.asset.displaySymbol})</span>
+            <span className="font-semibold">{selectedAssetConfig.displaySymbol} underlying</span>
             <a
               className="link break-all"
-              href={explorerAddress(config.asset.underlyingAddress)}
+              href={explorerAddress(selectedAssetConfig.underlyingAddress)}
               target="_blank"
               rel="noreferrer"
             >
-              {config.asset.underlyingAddress}
+              {selectedAssetConfig.underlyingAddress}
             </a>
-            <Address address={config.asset.underlyingAddress} chain={sepolia} />
+            <Address address={selectedAssetConfig.underlyingAddress} chain={sepolia} />
           </div>
           <div className="flex flex-col gap-1">
             <span className="font-semibold">Hackathon Pool</span>
             <a className="link break-all" href={explorerAddress(config.poolAddress)} target="_blank" rel="noreferrer">
               {config.poolAddress}
             </a>
-            <Address address={config.poolAddress} chain={sepolia} />
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold">aToken</span>
-            <a
-              className="link break-all"
-              href={explorerAddress(config.asset.aTokenAddress)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {config.asset.aTokenAddress}
-            </a>
-            <Address address={config.asset.aTokenAddress} chain={sepolia} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold">Variable debt token</span>
-            <a
-              className="link break-all"
-              href={explorerAddress(config.asset.variableDebtTokenAddress)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {config.asset.variableDebtTokenAddress}
-            </a>
-            <Address address={config.asset.variableDebtTokenAddress} chain={sepolia} />
-          </div>
+          {selectedAsset === "wETH" && (
+            <div className="flex flex-col gap-1">
+              <span className="font-semibold">WrappedTokenGateway</span>
+              <a
+                className="link break-all"
+                href={explorerAddress(config.wrappedTokenGateway)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {config.wrappedTokenGateway}
+              </a>
+            </div>
+          )}
         </div>
 
-        {hasZeroWalletBalance && (
+        {state.canWrap && (
+          <div className="bg-base-200 rounded-lg p-4 flex flex-col gap-3">
+            <div>
+              <h2 className="font-semibold">Get wETH</h2>
+              <p className="text-xs opacity-70 mt-1">
+                Wrap Sepolia ETH into this market&apos;s WETH9, or supply ETH in one step via Aave&apos;s
+                WrappedTokenGateway (wraps + supplies).
+              </p>
+            </div>
+            <label className="form-control w-full">
+              <span className="label-text font-semibold mb-1">ETH amount</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                className="input input-bordered w-full"
+                placeholder="0.0"
+                value={ethAmount}
+                onChange={e => setEthAmount(e.target.value)}
+                disabled={isBusy}
+              />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="btn btn-secondary"
+                disabled={!state.isCorrectNetwork || isBusy || !ethAmount}
+                onClick={() => void wrapEth(ethAmount)}
+              >
+                {state.isWrapping ? <span className="loading loading-spinner loading-sm" /> : null}
+                Wrap to wETH
+              </button>
+              <button
+                className="btn btn-primary"
+                disabled={!state.isCorrectNetwork || isBusy || !ethAmount}
+                onClick={() => void supplyEth(ethAmount)}
+              >
+                {state.isSupplying ? <span className="loading loading-spinner loading-sm" /> : null}
+                Supply ETH
+              </button>
+            </div>
+          </div>
+        )}
+
+        {state.canMint && hasZeroWalletBalance && (
           <div className="alert alert-warning">
             <div className="flex flex-col gap-2 text-sm">
-              <p className="font-semibold">No mNZD in this wallet</p>
+              <p className="font-semibold">No {selectedAssetConfig.displaySymbol} in this wallet</p>
               <p>
-                mNZD has no public faucet. Only the token owner can mint (
+                {selectedAssetConfig.displaySymbol} uses owner-only mint (
                 <code className="text-xs">mint(address,uint256)</code>).
               </p>
               {state.tokenOwner && (
@@ -152,22 +223,28 @@ const MnzdPage: NextPage = () => {
           </div>
         )}
 
-        {state.isConnected && state.isCorrectNetwork && !state.isOwner && !hasZeroWalletBalance && state.tokenOwner && (
-          <div className="alert alert-info text-sm">
-            Minting is owner-only. Current owner: <Address address={state.tokenOwner} chain={sepolia} />
-          </div>
-        )}
+        {state.canMint &&
+          hasZeroWalletBalance &&
+          state.isConnected &&
+          state.isCorrectNetwork &&
+          !state.isOwner &&
+          state.tokenOwner && (
+            <div className="alert alert-info text-sm">
+              Minting is owner-only. Current owner: <Address address={state.tokenOwner} chain={sepolia} />
+            </div>
+          )}
 
-        {state.isOwner && (
+        {state.canMint && state.isOwner && (
           <div className="bg-base-200 rounded-lg p-4 flex flex-col gap-3">
             <div>
               <h2 className="font-semibold">Owner faucet</h2>
               <p className="text-xs opacity-70 mt-1">
-                Connected wallet owns mNZD. Mint to yourself or another address (6 decimals).
+                Connected wallet owns {selectedAssetConfig.displaySymbol}. Mint to yourself or another address (
+                {selectedAssetConfig.decimals} decimals).
               </p>
             </div>
             <label className="form-control w-full">
-              <span className="label-text font-semibold mb-1">Mint amount ({config.asset.displaySymbol})</span>
+              <span className="label-text font-semibold mb-1">Mint amount ({selectedAssetConfig.displaySymbol})</span>
               <input
                 type="text"
                 inputMode="decimal"
@@ -193,8 +270,15 @@ const MnzdPage: NextPage = () => {
               onClick={() => void mint(mintAmount, mintTo || undefined)}
             >
               {state.isMinting ? <span className="loading loading-spinner loading-sm" /> : null}
-              Mint {config.asset.displaySymbol}
+              Mint {selectedAssetConfig.displaySymbol}
             </button>
+          </div>
+        )}
+
+        {selectedAsset !== "dNZD" && (
+          <div className="alert alert-success text-sm">
+            After supplying {selectedAsset} as collateral, switch to the <strong>dNZD</strong> tab to borrow the demo
+            NZD stable against it.
           </div>
         )}
 
@@ -230,6 +314,11 @@ const MnzdPage: NextPage = () => {
           onRepayAll={() => void repayAll()}
           onRefresh={() => void refresh()}
         />
+
+        <p className="text-xs opacity-60">
+          Reserves: {aaveHackathonMnzdConfig.assetSymbols.join(", ")}. Official Aave Sepolia UI is hidden for this demo
+          (route still at <code>/aave</code> if needed).
+        </p>
       </div>
     </div>
   );
