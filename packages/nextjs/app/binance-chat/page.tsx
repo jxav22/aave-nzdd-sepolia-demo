@@ -49,6 +49,16 @@ function newId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/** Bubbles render plain text, and the model reaches for markdown anyway. Strip the markers. */
+function plainText(content: string): string {
+  return content
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .trim();
+}
+
 const BinanceChatPage: NextPage = () => {
   const [messages, setMessages] = useState<UiMessage[]>([
     {
@@ -191,7 +201,7 @@ const BinanceChatPage: NextPage = () => {
                     message.role === "user" ? "chat-bubble-primary" : "chat-bubble-secondary"
                   }`}
                 >
-                  {message.content}
+                  {message.role === "assistant" ? plainText(message.content) : message.content}
                 </div>
                 {message.toolCalls && message.toolCalls.length > 0 && (
                   <div className="chat-footer opacity-60 text-xs mt-1 flex flex-col gap-0.5 max-w-prose">

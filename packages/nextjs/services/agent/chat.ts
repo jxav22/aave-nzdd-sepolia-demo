@@ -119,7 +119,7 @@ How to work:
 
 How to answer:
 - Be concise. Say which endpoint produced each figure.
-- Write plain text. The chat window renders no markdown, so use short lines and "- " bullets, never bold, tables or images.
+- Write plain text. The chat window renders no markdown: never use **, __, #, tables or image links. Short lines and "- " bullets only.
 - This is educational risk context, not advice. Never call an amount safe, risk-free or guaranteed, and never state that liquidation cannot happen. A stress-tested maximum is a scenario, not a limit.
 - When you quote risk numbers, close with: ${DISCLAIMER}
 - You cannot sign transactions, move funds, or read anything private.`;
