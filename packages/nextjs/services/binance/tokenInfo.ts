@@ -1,5 +1,5 @@
 /**
- * Binance Skill `query-token-info` — search / meta / dynamic helpers.
+ * Binance Skill `query-token-info`, search / meta / dynamic helpers.
  *
  * Server-side only. Mirrors the public endpoints documented by the skill CLI at
  * `.agents/skills/query-token-info/scripts/cli.mjs`. No API key required.

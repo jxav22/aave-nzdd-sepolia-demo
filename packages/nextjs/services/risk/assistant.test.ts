@@ -3,7 +3,7 @@
  *
  * The hackathon pool is currently unseeded, so no wallet on Sepolia holds collateral in
  * it. These build the position snapshot directly, which covers the funded path the live
- * market cannot yet exercise — and keeps the assertions deterministic either way.
+ * market cannot yet exercise, and keeps the assertions deterministic either way.
  */
 import { buildBorrowRiskReport } from "./assistant";
 import { describe, expect, it } from "vitest";

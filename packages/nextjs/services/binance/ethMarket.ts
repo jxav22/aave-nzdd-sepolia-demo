@@ -1,5 +1,5 @@
 /**
- * Binance Skill `query-token-info` — public ETH market context.
+ * Binance Skill `query-token-info`, public ETH market context.
  *
  * Server-side only. Uses the two public endpoints the skill documents (`dynamic` for
  * spot statistics and `kline` for candles) against mainnet WETH. Both are unauthenticated:
@@ -11,7 +11,7 @@
  * which also avoids spawning a subprocess per request.
  *
  * This data is market *context* only. It never determines borrowing capacity or
- * liquidation — the Aave oracle remains the source of truth for the protocol position.
+ * liquidation, the Aave oracle remains the source of truth for the protocol position.
  */
 
 /** Canonical WETH on Ethereum mainnet, used purely as the reference ETH market. */
@@ -128,7 +128,7 @@ export function parseKlineCandles(payload: unknown): Candle[] {
  *
  * Log returns are used so that a fall and the rise that undoes it are symmetric.
  * The drawdown walks intraday highs and lows rather than closes, so a spike down that
- * recovered by the close still counts — a position gets liquidated on the low, not the close.
+ * recovered by the close still counts, a position gets liquidated on the low, not the close.
  */
 export function computeCandleStats(candles: Candle[]): CandleStats {
   const ordered = [...candles].sort((a, b) => a.timestamp - b.timestamp);
@@ -272,7 +272,7 @@ let inFlight: Promise<EthMarketContext> | null = null;
  * Cached market context that never throws.
  *
  * A public API endpoint sits in front of this, so a failed upstream call degrades to a
- * labelled placeholder rather than a 5xx — an integrator's tool keeps working, and the
+ * labelled placeholder rather than a 5xx, an integrator's tool keeps working, and the
  * caller can see from `degraded` that scenarios came from fixed assumptions.
  *
  * Concurrent callers share one in-flight request so traffic cannot fan out to Binance.
@@ -308,7 +308,7 @@ export async function getEthMarketContext(options?: { forceRefresh?: boolean }):
   return inFlight;
 }
 
-/** Test hook — clears the module-level cache between cases. */
+/** Test hook, clears the module-level cache between cases. */
 export function resetEthMarketCache(): void {
   cache = null;
   inFlight = null;

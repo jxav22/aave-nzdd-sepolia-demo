@@ -57,7 +57,7 @@ export const CORS_HEADERS: Record<string, string> = {
  * Recursively convert bigint values to decimal strings.
  *
  * `JSON.stringify` throws on bigint, and coercing to `number` would silently lose
- * precision on wei-scale and WAD-scale values — the two things this API is built to
+ * precision on wei-scale and WAD-scale values, the two things this API is built to
  * report accurately. Strings are the only safe wire representation.
  */
 export function serialiseBigints<T>(value: T): unknown {

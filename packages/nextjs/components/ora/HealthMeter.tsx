@@ -8,7 +8,7 @@ import { formatHealth, healthBand, healthLabel, healthToneClass } from "~~/utils
  * Health factor with distance to the liquidation point.
  *
  * 1.0 is where liquidation becomes possible and is marked on the track. No debt reads ∞
- * and fills the track — it is the strongest possible position, not a missing value.
+ * and fills the track, it is the strongest possible position, not a missing value.
  */
 
 const BAR_CLASS: Record<ReturnType<typeof healthBand>, string> = {

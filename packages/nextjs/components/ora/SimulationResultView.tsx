@@ -6,8 +6,8 @@ import type { SimulationResult } from "~~/services/risk/simulate";
 /**
  * Renders a hand-described simulation.
  *
- * The simulate endpoint returns a narrower payload than the full report — there is no market or
- * position section, and `marketContext` is null whenever the caller supplied their own scenarios —
+ * The simulate endpoint returns a narrower payload than the full report, there is no market or
+ * position section, and `marketContext` is null whenever the caller supplied their own scenarios,
  * so this is a separate view rather than a coerced version of the full one. The obligations are
  * the same: the disclaimer always shows, and the stress-tested figure is never called safe.
  */
@@ -98,7 +98,7 @@ export const SimulationResultView = ({ result }: { result: SimulationResult }) =
       <ul className="mt-3 flex flex-col gap-1 text-sm text-muted-foreground">
         {result.input.collateral.map((leg, index) => (
           <li key={`${leg.symbol}-${index}`}>
-            {leg.symbol || "Collateral"} — liquidation threshold {leg.liquidationThresholdBps / 100}%
+            {leg.symbol || "Collateral"}: liquidation threshold {leg.liquidationThresholdBps / 100}%
             {leg.shockable ? "" : ", holds its value in a downturn"}
           </li>
         ))}
@@ -116,7 +116,7 @@ export const SimulationResultView = ({ result }: { result: SimulationResult }) =
           </p>
         ) : (
           <p className="leading-relaxed">
-            No market data was called — you supplied the scenarios, so this result is fully deterministic.
+            No market data was called. You supplied the scenarios, so this result is fully deterministic.
           </p>
         )}
         <ul className="flex list-inside list-disc flex-col gap-1">

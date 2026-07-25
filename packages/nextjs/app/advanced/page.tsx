@@ -18,7 +18,7 @@ const ASSET_TABS: HackathonAssetSymbol[] = ["wETH", "wBTC", "dNZD"];
  * Advanced panel.
  *
  * The raw protocol surface: aToken and variable-debt balances, allowances, unsequenced
- * individual actions, and the owner-only mint. Deliberately not linked from the header — the
+ * individual actions, and the owner-only mint. Deliberately not linked from the header, the
  * consumer flows live at /app. Kept because it is the fastest way to inspect or repair a
  * position, and because /app deliberately hides all of this.
  */
@@ -91,8 +91,8 @@ const AdvancedPage: NextPage = () => {
               {state.isConnected
                 ? state.isCorrectNetwork
                   ? "Ethereum Sepolia"
-                  : "Wrong network — switch to Sepolia"
-                : "—"}
+                  : "Wrong network. Switch to Sepolia"
+                : "-"}
             </span>
           </div>
           {state.isConnected && !state.isCorrectNetwork && (
@@ -252,7 +252,7 @@ const AdvancedPage: NextPage = () => {
               />
             </label>
             <label className="form-control w-full">
-              <span className="label-text font-semibold mb-1">Mint to (optional — defaults to connected wallet)</span>
+              <span className="label-text font-semibold mb-1">Mint to (optional, defaults to connected wallet)</span>
               <AddressInput
                 placeholder={address ?? "0x…"}
                 value={mintTo}

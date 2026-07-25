@@ -63,7 +63,7 @@ export function formatNzdNumber(value: number, options: MoneyOptions = {}): stri
   return options.bare ? body : `${NZD.symbol}${body}`;
 }
 
-/** An Aave base-currency amount (8 decimals) — collateral value, borrowing power, prices. */
+/** An Aave base-currency amount (8 decimals), collateral value, borrowing power, prices. */
 export function formatBase(raw: bigint, options: MoneyOptions = {}): string {
   const decimals = options.decimals ?? 2;
   const body = group(toNumber(raw, BASE_CURRENCY.decimals), decimals, decimals);
@@ -71,7 +71,7 @@ export function formatBase(raw: bigint, options: MoneyOptions = {}): string {
 }
 
 /**
- * A token quantity with its own symbol — for collateral assets, where a value in
+ * A token quantity with its own symbol, for collateral assets, where a value in
  * dollars would need the oracle and the quantity is what the user actually holds.
  */
 export function formatToken(raw: bigint, tokenDecimals: number, symbol: string, maxFractionDigits = 6): string {
@@ -81,14 +81,14 @@ export function formatToken(raw: bigint, tokenDecimals: number, symbol: string, 
   return `${group(value, 2, digits)} ${symbol}`;
 }
 
-/** Bare token quantity, no symbol — for input field prefills. */
+/** Bare token quantity, no symbol, for input field prefills. */
 export function formatTokenBare(raw: bigint, tokenDecimals: number): string {
   return formatUnits(raw, tokenDecimals);
 }
 
 export function formatPercent(value: number, decimals = 2): string {
   if (!Number.isFinite(value)) {
-    return "—";
+    return "-";
   }
   return `${value.toFixed(decimals)}%`;
 }
@@ -96,14 +96,14 @@ export function formatPercent(value: number, decimals = 2): string {
 /** Signed percentage, for price moves. */
 export function formatSignedPercent(value: number, decimals = 2): string {
   if (!Number.isFinite(value)) {
-    return "—";
+    return "-";
   }
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(decimals)}%`;
 }
 
 /**
- * Health factor for display. No debt is `maxUint256`, which renders as ∞ — never 0,
+ * Health factor for display. No debt is `maxUint256`, which renders as ∞, never 0,
  * and never a warning state.
  */
 export function formatHealth(healthFactor: bigint | undefined): string {

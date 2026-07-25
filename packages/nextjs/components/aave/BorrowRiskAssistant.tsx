@@ -10,15 +10,15 @@ import type { BorrowRiskReport } from "~~/services/risk/assistant";
  *
  * Calls the same public `/api/v1/borrow-risk` endpoint documented for third parties, so
  * the demo exercises the published contract rather than a private path. Renders only
- * what the server computed — no arithmetic happens here, so the UI cannot disagree with
+ * what the server computed, no arithmetic happens here, so the UI cannot disagree with
  * the API. The user still confirms the borrow themselves; this panel can pre-fill the
  * amount field but never submits a transaction.
  */
 
 const TARGET_HEALTH_FACTORS = [
-  { value: "1.1", label: "1.1 — smaller buffer" },
-  { value: "1.2", label: "1.2 — moderate buffer" },
-  { value: "1.5", label: "1.5 — larger buffer" },
+  { value: "1.1", label: "1.1 (smaller buffer)" },
+  { value: "1.2", label: "1.2 (moderate buffer)" },
+  { value: "1.5", label: "1.5 (larger buffer)" },
 ];
 
 const SHOCK_OPTIONS = [
@@ -335,7 +335,7 @@ export const BorrowRiskAssistant = ({ address, amount, onUseAmount, isCorrectNet
                 <p className="opacity-80">
                   Aave reports {data.selfCheck.aaveReportedHealthFactor.formatted}; recomputing from the per-asset model
                   gives {data.selfCheck.recomputedHealthFactor.formatted}.{" "}
-                  {data.selfCheck.matches ? "These agree." : "These disagree — treat the table with caution."}
+                  {data.selfCheck.matches ? "These agree." : "These disagree. Treat the table with caution."}
                 </p>
               </div>
 
@@ -344,7 +344,7 @@ export const BorrowRiskAssistant = ({ address, amount, onUseAmount, isCorrectNet
                 <ol className="list-decimal list-inside opacity-80 flex flex-col gap-1">
                   {data.steps.map(step => (
                     <li key={step.step}>
-                      <span className="font-mono">{step.tool}</span> — {step.detail}
+                      <span className="font-mono">{step.tool}</span>: {step.detail}
                       {step.durationMs > 0 ? ` (${step.durationMs}ms)` : ""}
                     </li>
                   ))}

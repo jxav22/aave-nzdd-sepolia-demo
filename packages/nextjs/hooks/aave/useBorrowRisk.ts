@@ -7,7 +7,7 @@ import type { BorrowRiskReport } from "~~/services/risk/assistant";
 /**
  * Calls the same public `/api/v1/borrow-risk` endpoint documented for third parties, so our own
  * interface exercises the published contract rather than a private path. Every number rendered
- * is computed server-side — the interface does no risk arithmetic and therefore cannot disagree
+ * is computed server-side, the interface does no risk arithmetic and therefore cannot disagree
  * with the API or with the protocol.
  */
 

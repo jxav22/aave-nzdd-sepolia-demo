@@ -64,7 +64,7 @@ function mapTxError(error: unknown, fallback: string): string {
 /**
  * Reusable Aave V3 Sepolia integration hook (EURS same-asset supply / borrow).
  *
- * Approve and supply/repay are separate confirmed transactions — never auto-chained.
+ * Approve and supply/repay are separate confirmed transactions, never auto-chained.
  */
 export function useAaveSepolia(): UseAaveSepoliaReturn {
   const { address, chainId, isConnected } = useAccount();

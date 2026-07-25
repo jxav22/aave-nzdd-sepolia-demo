@@ -11,7 +11,7 @@ import { formatBase, formatNzd, formatPercent, formatToken } from "~~/utils/form
  * Where the account stands.
  *
  * Adaptive by design: someone who has only deposited New Zealand dollars sees their balance and
- * the rate it earns, and nothing about collateral, health factors or liquidation — none of it
+ * the rate it earns, and nothing about collateral, health factors or liquidation, none of it
  * applies to them, and showing it would be alarming for no reason. The collateral and health
  * section appears only once there is collateral or a loan.
  */
@@ -61,7 +61,7 @@ export const OverviewPanel = ({
           {positions.hasAnyDebt ? (
             <Stat label="Borrowed" value={formatNzd(nzd.borrowed, nzd.decimals)} hint="Interest accruing" />
           ) : (
-            <Stat label="Rate" value={nzdReserve ? formatPercent(nzdReserve.supplyApyPercent) : "—"} hint="Variable" />
+            <Stat label="Rate" value={nzdReserve ? formatPercent(nzdReserve.supplyApyPercent) : "-"} hint="Variable" />
           )}
         </div>
 

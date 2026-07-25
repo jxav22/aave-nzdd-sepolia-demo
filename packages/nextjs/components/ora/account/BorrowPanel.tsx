@@ -29,7 +29,7 @@ import { formatBase, formatNzd, formatPercent, formatToken, formatTokenBare } fr
  *
  * Two ordered steps on one surface: deposit collateral, then borrow against it. The
  * consequences of borrowing against a volatile asset are stated in plain words directly above
- * the borrow action and are never collapsed — someone new to this has to be able to see, before
+ * the borrow action and are never collapsed, someone new to this has to be able to see, before
  * committing, that a large enough fall costs them the collateral.
  *
  * Borrowing capacity and available liquidity are shown as separate figures throughout. They are
@@ -100,7 +100,7 @@ export const BorrowPanel = ({
 
   /**
    * The borrow ceiling is the lower of what the pool will lend this position and what the pool
-   * actually holds. Capacity alone is not enough — a borrow above available liquidity reverts.
+   * actually holds. Capacity alone is not enough, a borrow above available liquidity reverts.
    */
   const borrowCeiling = useMemo(() => {
     const capacity = availableBorrowsInNzd(positions.availableBorrowsBase, nzdDecimals);
@@ -222,7 +222,7 @@ export const BorrowPanel = ({
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Step one — collateral */}
+        {/* Step one, collateral */}
         <Card>
           <Eyebrow>Step one</Eyebrow>
           <h2 className="mt-2 font-display text-3xl">Deposit what you already hold</h2>
@@ -339,13 +339,13 @@ export const BorrowPanel = ({
           </div>
         </Card>
 
-        {/* Step two — borrow */}
+        {/* Step two, borrow */}
         <Card>
           <Eyebrow>Step two</Eyebrow>
           <h2 className="mt-2 font-display text-3xl">Borrow New Zealand dollars</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Interest accrues at {formatPercent(nzdReserve?.borrowApyPercent ?? 0)}, variable. There is no repayment
-            schedule — repay whenever you like, in part or in full.
+            schedule. Repay whenever you like, in part or in full.
           </p>
 
           <div className="mt-6 grid grid-cols-2 gap-6">

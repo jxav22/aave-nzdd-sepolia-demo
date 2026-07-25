@@ -1,7 +1,7 @@
 /**
  * Deterministic borrow stress-testing math.
  *
- * Pure integer arithmetic over Aave base-currency units — no I/O, no floats in the
+ * Pure integer arithmetic over Aave base-currency units, no I/O, no floats in the
  * core path, no dependency on the caller's market. Every figure the Borrow Risk
  * Assistant reports comes from here so that nothing downstream (UI, API, or an LLM
  * summarising the result) can invent a number.
@@ -116,7 +116,7 @@ export function projectedHealthFactorWad(params: {
  *
  * Solved in closed form from `A x (BPS + x) + B x BPS >= debt x BPS^2`, where A and B
  * are the shockable and non-shockable liquidation-weighted values. Returns null when
- * no ETH decline can trigger liquidation — either there is no debt, no ETH-correlated
+ * no ETH decline can trigger liquidation, either there is no debt, no ETH-correlated
  * collateral, or the unshockable collateral alone already covers the debt.
  */
 export function solveLiquidationShockBps(params: {
@@ -202,7 +202,7 @@ export function interpretHealthFactor(healthFactorWad: bigint | null): string {
 
 /**
  * Build the stress table. The caller supplies the shocks so that scenario
- * selection stays separable from — and testable independently of — the arithmetic.
+ * selection stays separable from, and testable independently of, the arithmetic.
  */
 export function buildScenarios(params: {
   collateral: CollateralLeg[];

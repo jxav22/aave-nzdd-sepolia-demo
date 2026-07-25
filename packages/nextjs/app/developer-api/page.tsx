@@ -277,7 +277,7 @@ const DeveloperApiPage: NextPage = () => {
             <CpuChipIcon className="h-8 w-8 shrink-0" />
             Developer API
           </h1>
-          <p className="mt-2 text-sm opacity-80">Public Borrow Risk Assistant API v1 — interactive demo</p>
+          <p className="mt-2 text-sm opacity-80">Public Borrow Risk Assistant API v1 playground</p>
           <p className="text-base font-medium">Open, unauthenticated, read-only. No API key. No wallet signature.</p>
           <p className="text-sm opacity-70 mt-1">
             Exercises the main published routes under <code>/api/v1/*</code>, including Binance-backed market context
@@ -334,7 +334,7 @@ const DeveloperApiPage: NextPage = () => {
                   Envelope: <code>{`{ ok, schemaVersion, data | error }`}</code>
                 </li>
                 <li>
-                  Chain amounts are decimal strings with a <code>decimals</code> sibling — never JSON numbers.
+                  Chain amounts are decimal strings with a <code>decimals</code> sibling, never JSON numbers.
                 </li>
                 <li>
                   CORS <code>*</code>, rate-limit headers on every response, Binance failure degrades (no 5xx).
@@ -364,7 +364,7 @@ const DeveloperApiPage: NextPage = () => {
           <section className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm opacity-80 grow">
-                <code>GET /api/v1/market/eth</code> — Binance skill dynamic + kline context (cached ~60s).
+                <code>GET /api/v1/market/eth</code>: Binance skill dynamic + kline context (cached ~60s).
               </p>
               <button
                 type="button"
@@ -427,7 +427,7 @@ const DeveloperApiPage: NextPage = () => {
         {active === "token-search" && (
           <section className="flex flex-col gap-4">
             <p className="text-sm opacity-80">
-              <code>GET /api/v1/binance/token/search</code> — Binance <code>query-token-info</code> search skill proxy.
+              <code>GET /api/v1/binance/token/search</code>: Binance <code>query-token-info</code> search skill proxy.
             </p>
             <form onSubmit={onTokenSearch} className="bg-base-200 rounded-lg p-4 flex flex-col sm:flex-row gap-2">
               <input
@@ -504,7 +504,7 @@ const DeveloperApiPage: NextPage = () => {
         {active === "position" && (
           <section className="flex flex-col gap-4">
             <p className="text-sm opacity-80">
-              <code>GET /api/v1/position/{"{address}"}</code> — raw Aave position read (RPC).
+              <code>GET /api/v1/position/{"{address}"}</code>: raw Aave position read (RPC).
             </p>
             <form onSubmit={onPosition} className="bg-base-200 rounded-lg p-4 flex flex-col sm:flex-row gap-2">
               <input
@@ -528,26 +528,26 @@ const DeveloperApiPage: NextPage = () => {
               <div className="bg-base-200 rounded-lg p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <div>
                   <p className="text-xs opacity-70">Collateral (base)</p>
-                  <p className="font-medium font-mono text-xs">{positionSummary.account?.totalCollateralBase ?? "—"}</p>
+                  <p className="font-medium font-mono text-xs">{positionSummary.account?.totalCollateralBase ?? "-"}</p>
                 </div>
                 <div>
                   <p className="text-xs opacity-70">Debt (base)</p>
-                  <p className="font-medium font-mono text-xs">{positionSummary.account?.totalDebtBase ?? "—"}</p>
+                  <p className="font-medium font-mono text-xs">{positionSummary.account?.totalDebtBase ?? "-"}</p>
                 </div>
                 <div>
                   <p className="text-xs opacity-70">Health factor</p>
-                  <p className="font-medium">{positionSummary.account?.healthFactor?.formatted ?? "—"}</p>
+                  <p className="font-medium">{positionSummary.account?.healthFactor?.formatted ?? "-"}</p>
                 </div>
                 <div>
                   <p className="text-xs opacity-70">Available borrows (base)</p>
                   <p className="font-medium font-mono text-xs">
-                    {positionSummary.account?.availableBorrowsBase ?? "—"}
+                    {positionSummary.account?.availableBorrowsBase ?? "-"}
                   </p>
                 </div>
                 <div className="col-span-full text-xs opacity-70">
-                  Market {positionSummary.market?.marketId ?? "—"} · block {positionSummary.market?.blockNumber ?? "—"}{" "}
-                  · user debt {positionSummary.borrowAsset?.userDebtFormatted ?? "—"} · pool liquidity{" "}
-                  {positionSummary.borrowAsset?.poolLiquidityFormatted ?? "—"}{" "}
+                  Market {positionSummary.market?.marketId ?? "-"} · block {positionSummary.market?.blockNumber ?? "-"}{" "}
+                  · user debt {positionSummary.borrowAsset?.userDebtFormatted ?? "-"} · pool liquidity{" "}
+                  {positionSummary.borrowAsset?.poolLiquidityFormatted ?? "-"}{" "}
                   {positionSummary.borrowAsset?.symbol ?? ""}
                 </div>
               </div>
@@ -559,7 +559,7 @@ const DeveloperApiPage: NextPage = () => {
         {active === "borrow-risk" && (
           <section className="flex flex-col gap-4">
             <p className="text-sm opacity-80">
-              <code>GET /api/v1/borrow-risk</code> — full assistant: position + Binance context + stress scenarios +
+              <code>GET /api/v1/borrow-risk</code>: full assistant, position + Binance context + stress scenarios +
               agent steps.
             </p>
             <form onSubmit={onBorrowRisk} className="bg-base-200 rounded-lg p-4 flex flex-col gap-3">
@@ -614,27 +614,27 @@ const DeveloperApiPage: NextPage = () => {
                   <div>
                     <p className="text-xs opacity-70">Protocol max</p>
                     <p className="font-medium">
-                      {borrowSummary.proposal?.protocolMaximum?.formatted ?? "—"}{" "}
+                      {borrowSummary.proposal?.protocolMaximum?.formatted ?? "-"}{" "}
                       {borrowSummary.proposal?.protocolMaximum?.symbol ?? ""}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs opacity-70">Stress-tested max</p>
                     <p className="font-medium">
-                      {borrowSummary.stressTest?.stressTestedMaximum?.formatted ?? "—"}{" "}
+                      {borrowSummary.stressTest?.stressTestedMaximum?.formatted ?? "-"}{" "}
                       {borrowSummary.stressTest?.stressTestedMaximum?.symbol ?? ""}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs opacity-70">Projected HF</p>
-                    <p className="font-medium">{borrowSummary.proposal?.projectedHealthFactor?.formatted ?? "—"}</p>
+                    <p className="font-medium">{borrowSummary.proposal?.projectedHealthFactor?.formatted ?? "-"}</p>
                   </div>
                   <div>
                     <p className="text-xs opacity-70">Liq. at ETH Δ</p>
                     <p className="font-medium">
                       {borrowSummary.proposal?.liquidationAtEthChangePercent != null
                         ? formatChange(borrowSummary.proposal.liquidationAtEthChangePercent)
-                        : "—"}
+                        : "-"}
                     </p>
                   </div>
                 </div>
@@ -681,7 +681,7 @@ const DeveloperApiPage: NextPage = () => {
         {active === "simulate" && (
           <section className="flex flex-col gap-4">
             <p className="text-sm opacity-80">
-              <code>POST /api/v1/borrow-risk/simulate</code> — bring-your-own position. No wallet / chain read. Omit{" "}
+              <code>POST /api/v1/borrow-risk/simulate</code>: bring-your-own position. No wallet / chain read. Omit{" "}
               <code>shocksBps</code> to derive scenarios from Binance; supply them for a deterministic run.
             </p>
             <form onSubmit={onSimulate} className="bg-base-200 rounded-lg p-4 flex flex-col gap-3">
@@ -709,22 +709,22 @@ const DeveloperApiPage: NextPage = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <p className="text-xs opacity-70">Projected HF</p>
-                    <p className="font-medium">{simulateSummary.projectedHealthFactor?.formatted ?? "—"}</p>
+                    <p className="font-medium">{simulateSummary.projectedHealthFactor?.formatted ?? "-"}</p>
                   </div>
                   <div>
                     <p className="text-xs opacity-70">Stress max (base)</p>
-                    <p className="font-medium">{simulateSummary.stressTest?.stressTestedMaximumFormatted ?? "—"}</p>
+                    <p className="font-medium">{simulateSummary.stressTest?.stressTestedMaximumFormatted ?? "-"}</p>
                   </div>
                   <div>
                     <p className="text-xs opacity-70">Scenario source</p>
-                    <p className="font-medium font-mono text-xs">{simulateSummary.scenarioSource ?? "—"}</p>
+                    <p className="font-medium font-mono text-xs">{simulateSummary.scenarioSource ?? "-"}</p>
                   </div>
                   <div>
                     <p className="text-xs opacity-70">Liq. at ETH Δ</p>
                     <p className="font-medium">
                       {simulateSummary.liquidationAtEthChangePercent != null
                         ? formatChange(simulateSummary.liquidationAtEthChangePercent)
-                        : "—"}
+                        : "-"}
                     </p>
                   </div>
                 </div>

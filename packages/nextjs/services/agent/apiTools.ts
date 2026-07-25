@@ -4,8 +4,8 @@
  * Tools are derived from `buildOpenApiDocument()` rather than hand-written, so the agent
  * can only ever do what the documented API does, and a new endpoint becomes a new tool as
  * soon as it is described in the spec. Calls go out over HTTP against this same app, which
- * means the agent exercises the published contract — rate limits, envelope, validation
- * errors and all — instead of reaching past it into the service layer.
+ * means the agent exercises the published contract, rate limits, envelope, validation
+ * errors and all, instead of reaching past it into the service layer.
  *
  * Operations opt out with `x-agent-tool: false` (the chat endpoint itself, to avoid
  * recursion) and contribute a starter prompt with `x-agent-example`.
@@ -103,7 +103,7 @@ function resolveSchema(schema: JsonSchema | undefined, schemas: Record<string, J
 
 function describe(operation: OpenApiOperation, method: string, path: string): string {
   const detail = (operation.description ?? "").split("\n\n")[0];
-  return [`${method} ${path}`, operation.summary, detail].filter(Boolean).join(" — ");
+  return [`${method} ${path}`, operation.summary, detail].filter(Boolean).join(" Â· ");
 }
 
 function toolFromOperation(method: "GET" | "POST", path: string, operation: OpenApiOperation, doc: OpenApiDocument) {
@@ -248,7 +248,7 @@ function summarise(status: number, ok: boolean, body: unknown): string {
 }
 
 export type AgentToolContext = {
-  /** Origin of the API the agent calls — normally the app serving the chat. */
+  /** Origin of the API the agent calls, normally the app serving the chat. */
   origin: string;
   /** Forwarded so a tool call is rate-limited against the real caller, not the server. */
   forwardedFor?: string | null;

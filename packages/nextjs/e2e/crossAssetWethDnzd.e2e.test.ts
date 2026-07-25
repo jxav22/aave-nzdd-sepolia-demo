@@ -1,5 +1,5 @@
 /**
- * Suite B — cross-asset: wETH collateral → borrow dNZD on live Sepolia.
+ * Suite B, cross-asset: wETH collateral → borrow dNZD on live Sepolia.
  *
  * Opt-in only (excluded from `yarn test:aave`):
  *

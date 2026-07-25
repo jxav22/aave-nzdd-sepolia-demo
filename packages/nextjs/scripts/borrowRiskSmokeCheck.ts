@@ -101,7 +101,7 @@ async function main() {
     : position.collateralLegs;
 
   if (isHypothetical) {
-    console.log(`  (no on-chain collateral for this address — illustrating with 1 ${COLLATERAL_SYMBOL})\n`);
+    console.log(`  (no on-chain collateral for this address, illustrating with 1 ${COLLATERAL_SYMBOL})\n`);
   }
 
   const proposedBorrowTokens = 400n * 10n ** BigInt(borrowAsset.decimals);
@@ -168,7 +168,7 @@ async function main() {
   console.log(`  matches              ${reconciliation.matches}`);
 
   if (!reconciliation.matches) {
-    throw new Error("Recomputed health factor does not match Aave's — collateral decomposition is wrong.");
+    throw new Error("Recomputed health factor does not match Aave's. Collateral decomposition is wrong.");
   }
 
   if (position.borrowAssetLiquidity === 0n) {

@@ -5,7 +5,7 @@
  * volatility and 30-day drawdown the stress scenarios are built from.
  *
  * Backed by a 60-second server cache, so public traffic here cannot fan out to Binance.
- * Never 5xxs on an upstream failure — the response carries `degraded` instead.
+ * Never 5xxs on an upstream failure, the response carries `degraded` instead.
  */
 import { checkRateLimit, clientIdentifier, rateLimitHeaders } from "~~/services/api/rateLimit";
 import { handleOptions, jsonError, jsonOk, withApiErrorHandling } from "~~/services/api/respond";

@@ -254,12 +254,12 @@ function presetsFor(balance: bigint, decimals: number, bare: string) {
 }
 
 /**
- * A year of interest at the current rate. Display arithmetic on a rate, not on a balance —
+ * A year of interest at the current rate. Display arithmetic on a rate, not on a balance,
  * explicitly framed as conditional because the rate is variable.
  */
 function estimateAnnualInterest(deposited: bigint, decimals: number, ratePercent: number): string {
   if (deposited === 0n || ratePercent <= 0) {
-    return "—";
+    return "-";
   }
   const scaled = (deposited * BigInt(Math.round(ratePercent * 10_000))) / 1_000_000n;
   return formatNzd(scaled, decimals);

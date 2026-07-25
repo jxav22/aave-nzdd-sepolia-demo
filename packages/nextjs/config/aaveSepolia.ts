@@ -12,7 +12,7 @@ import { sepolia } from "viem/chains";
  * Decimals come from address-book metadata (`ASSETS.EURS.decimals`, typically 2).
  * The integration hook also reads on-chain `decimals()` and surfaces a mismatch.
  *
- * This is Aave's Sepolia test EURS — not NZDD and not USDC.
+ * This is Aave's Sepolia test EURS, not NZDD and not USDC.
  */
 
 const eursAsset = AaveV3Sepolia.ASSETS?.EURS;
@@ -46,7 +46,7 @@ const ADDRESS_BOOK_EURS_DECIMALS = eursAsset.decimals;
 if (typeof ADDRESS_BOOK_EURS_DECIMALS !== "number" || ADDRESS_BOOK_EURS_DECIMALS <= 0) {
   throw new Error(
     "Aave V3 Sepolia EURS.decimals is missing from the address book. " +
-      "Refusing undocumented fallback — update @aave-dao/aave-address-book.",
+      "Refusing undocumented fallback. Update @aave-dao/aave-address-book.",
   );
 }
 

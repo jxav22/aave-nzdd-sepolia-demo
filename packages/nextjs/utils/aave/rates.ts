@@ -5,7 +5,7 @@
  * per-second APRs scaled by ray (1e27). Aave's own interfaces display the
  * compounded APY, so we do the same conversion here.
  *
- * These are rates, not token amounts — a float is the right representation and
+ * These are rates, not token amounts, a float is the right representation and
  * the precision rules that apply to balances do not apply here.
  */
 
@@ -36,7 +36,7 @@ export function utilisationPercent(totalSupplied: bigint, totalBorrowed: bigint)
   if (totalSupplied <= 0n) {
     return 0;
   }
-  // Ratio of two same-decimal amounts — safe to widen once scaled.
+  // Ratio of two same-decimal amounts, safe to widen once scaled.
   const scaled = (totalBorrowed * 1_000_000n) / totalSupplied;
   return Number(scaled) / 10_000;
 }

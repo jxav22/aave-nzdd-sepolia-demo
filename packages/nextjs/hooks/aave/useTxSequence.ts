@@ -8,7 +8,7 @@ import { useCallback, useRef, useState } from "react";
  * The protocol requires approve-then-supply and approve-then-repay as separate signatures.
  * That is a protocol constraint, not a thing the person depositing should have to reason
  * about, so this drives them in order behind a single button and reports where the sequence
- * is. Each step's `run` is an existing tested write path — nothing here talks to a contract
+ * is. Each step's `run` is an existing tested write path, nothing here talks to a contract
  * itself, so the sequencing cannot diverge from the single-action behaviour.
  *
  * A failed step stops the sequence and leaves its error in place; earlier confirmed steps
@@ -20,7 +20,7 @@ export type TxStepStatus = "pending" | "active" | "confirmed" | "failed" | "skip
 export type TxStepSpec = {
   id: string;
   label: string;
-  /** Return false to skip — e.g. an allowance that already covers the amount. */
+  /** Return false to skip, e.g. an allowance that already covers the amount. */
   shouldRun?: () => boolean;
   run: () => Promise<unknown>;
 };

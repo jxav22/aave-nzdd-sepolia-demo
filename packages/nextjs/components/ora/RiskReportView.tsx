@@ -11,7 +11,7 @@ import type { BorrowRiskReport } from "~~/services/risk/assistant";
  * to each caller:
  *
  * - `disclaimer` is always rendered and never inside a collapsed section.
- * - The stress-tested figure is never described as safe or recommended — it is the amount that
+ * - The stress-tested figure is never described as safe or recommended, it is the amount that
  *   holds a chosen health factor through one chosen decline, and other declines exist.
  * - The protocol's own maximum stays labelled as the protocol's limit.
  * - `degraded` and a failed `selfCheck` are surfaced, not swallowed.
@@ -126,7 +126,7 @@ export const StressTestedAmount = ({
         {report.stressTest.stressTestedMaximum.formatted} {report.market.borrowSymbol}
       </span>{" "}
       would keep your health factor at or above {report.stressTest.targetHealthFactor.formatted} through a{" "}
-      {Math.abs(report.stressTest.shockEthPriceChangePercent)}% fall in ETH. That is one decline out of many — a larger
+      {Math.abs(report.stressTest.shockEthPriceChangePercent)}% fall in ETH. That is one decline out of many. A larger
       fall than that would take you further.
     </p>
 
@@ -297,7 +297,7 @@ export const RiskReportView = ({
           <ol className="mt-2 flex flex-col gap-1 text-muted-foreground">
             {report.steps.map(step => (
               <li key={step.step}>
-                <span className="font-mono">{step.tool}</span> — {step.detail}
+                <span className="font-mono">{step.tool}</span>: {step.detail}
                 {step.durationMs > 0 ? ` (${step.durationMs}ms)` : ""}
               </li>
             ))}

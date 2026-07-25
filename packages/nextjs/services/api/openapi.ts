@@ -41,7 +41,7 @@ export function buildOpenApiDocument(origin: string) {
         "Stress-tests Aave V3 borrowing positions against recent ETH market behaviour sourced from public " +
         "Binance endpoints.\n\n" +
         "Open and unauthenticated. No API key, no Binance account and no wallet signature are required, and " +
-        "nothing here can move funds — every endpoint is read-only.\n\n" +
+        "nothing here can move funds. Every endpoint is read-only.\n\n" +
         "All chain-derived quantities are returned as decimal strings with an explicit `decimals` field. They " +
         "are never JSON numbers, because health factors and wei-scale balances lose precision as IEEE doubles.\n\n" +
         "Results are illustrative risk context, not financial advice. Any client rendering this data should " +
