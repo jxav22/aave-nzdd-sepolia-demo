@@ -280,8 +280,8 @@ const DeveloperApiPage: NextPage = () => {
           <p className="mt-2 text-sm opacity-80">Public Borrow Risk Assistant API v1 — interactive demo</p>
           <p className="text-base font-medium">Open, unauthenticated, read-only. No API key. No wallet signature.</p>
           <p className="text-sm opacity-70 mt-1">
-            Exercises every published route under <code>/api/v1/*</code>, including Binance-backed market context and
-            the hackathon Aave position / borrow-risk surface. Spec:{" "}
+            Exercises the main published routes under <code>/api/v1/*</code>, including Binance-backed market context
+            and the hackathon Aave position / borrow-risk surface. Spec:{" "}
             <a className="link" href="/api/v1/openapi.json" target="_blank" rel="noreferrer">
               /api/v1/openapi.json
             </a>{" "}

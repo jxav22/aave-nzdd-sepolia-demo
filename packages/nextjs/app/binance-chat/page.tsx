@@ -7,11 +7,20 @@ import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from "@heroicons/react/24/
 
 type ChatRole = "user" | "assistant";
 
+type ApiCall = {
+  name: string;
+  method: string;
+  path: string;
+  status: number;
+  ok: boolean;
+  resultSummary: string;
+};
+
 type UiMessage = {
   id: string;
   role: ChatRole;
   content: string;
-  toolCalls?: { name: string; resultSummary: string }[];
+  toolCalls?: ApiCall[];
 };
 
 type StatusResponse = {
@@ -19,8 +28,8 @@ type StatusResponse = {
   data?: {
     configured: boolean;
     model: string;
-    skill: string;
-    tools: string[];
+    tools: { name: string; method: string; path: string }[];
+    suggestions: string[];
     envHint: string;
   };
 };
@@ -30,17 +39,11 @@ type ChatResponse = {
   data?: {
     reply: string;
     model: string;
-    toolCalls: { name: string; resultSummary: string }[];
+    toolCalls: ApiCall[];
+    suggestions: string[];
   };
   error?: { message?: string; code?: string };
 };
-
-const SUGGESTIONS = [
-  "What's the price of ETH on Ethereum?",
-  "Search for USDC on Base",
-  "Find BNB on BSC and show liquidity",
-  "Who created WETH and what's its website?",
-] as const;
 
 function newId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -52,7 +55,7 @@ const BinanceChatPage: NextPage = () => {
       id: "welcome",
       role: "assistant",
       content:
-        "Ask about a token and I'll call the public Binance query-token-info skill (search, dynamic, meta). Example: “Price of ETH on Ethereum?”",
+        "Ask me anything this app's public API can answer — token markets, a wallet's Aave position, or how a proposed dNZD borrow holds up if ETH falls. Every answer comes from a real call to /api/v1.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -60,6 +63,8 @@ const BinanceChatPage: NextPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [model, setModel] = useState("gpt-4o-mini");
+  const [toolCount, setToolCount] = useState(0);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [envHint, setEnvHint] = useState("Set OPENAI_API_KEY in packages/nextjs/.env.local");
   const bottomRef = useRef<HTMLDivElement>(null);
   const sendingLock = useRef(false);
@@ -72,6 +77,8 @@ const BinanceChatPage: NextPage = () => {
         if (response.ok && body.ok && body.data) {
           setConfigured(body.data.configured);
           setModel(body.data.model);
+          setToolCount(body.data.tools.length);
+          setSuggestions(body.data.suggestions);
           setEnvHint(body.data.envHint);
         } else {
           setConfigured(false);
@@ -102,6 +109,7 @@ const BinanceChatPage: NextPage = () => {
 
       setMessages(prev => [...prev, userMessage]);
       setInput("");
+      setSuggestions([]);
       setIsSending(true);
 
       try {
@@ -128,6 +136,7 @@ const BinanceChatPage: NextPage = () => {
             toolCalls: data.toolCalls,
           },
         ]);
+        setSuggestions(data.suggestions ?? []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Chat failed.");
       } finally {
@@ -149,12 +158,13 @@ const BinanceChatPage: NextPage = () => {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <ChatBubbleLeftRightIcon className="h-8 w-8" />
-            Binance Skills Chat
+            API Agent Chat
           </h1>
-          <p className="mt-2 text-sm opacity-80">Interactive chatbot demo over public Binance agent skills</p>
+          <p className="mt-2 text-sm opacity-80">A chatbot whose entire toolset is this app&apos;s public API</p>
           <p className="text-sm opacity-70 mt-1">
-            Dialogue uses OpenAI tool-calling. Token data comes from the public <code>query-token-info</code> skill
-            (search / dynamic / meta) — no Binance API key.
+            Tools are generated from <code>/api/v1/openapi.json</code>, and each one is an HTTP call to the same
+            endpoints you can curl — Binance market data, Aave positions, borrow-risk stress tests. Dialogue uses OpenAI
+            tool-calling; the API itself needs no key.
           </p>
         </div>
 
@@ -168,7 +178,7 @@ const BinanceChatPage: NextPage = () => {
 
         {configured && (
           <p className="text-xs opacity-60">
-            Model <code>{model}</code> · tools: search / dynamic / meta · Binance auth: none
+            Model <code>{model}</code> · {toolCount} API operations as tools · no API key, no wallet signature
           </p>
         )}
 
@@ -187,7 +197,13 @@ const BinanceChatPage: NextPage = () => {
                   <div className="chat-footer opacity-60 text-xs mt-1 flex flex-col gap-0.5 max-w-prose">
                     {message.toolCalls.map((call, index) => (
                       <span key={`${message.id}-${index}`}>
-                        tool <code>{call.name}</code>: {call.resultSummary}
+                        <code>
+                          {call.method} {call.path}
+                        </code>{" "}
+                        <span className={call.ok ? "" : "text-error"}>
+                          → {call.status || "failed"}
+                          {call.ok ? "" : ` ${call.resultSummary}`}
+                        </span>
                       </span>
                     ))}
                   </div>
@@ -196,32 +212,36 @@ const BinanceChatPage: NextPage = () => {
             ))}
             {isSending && (
               <div className="chat chat-start">
-                <div className="chat-bubble chat-bubble-secondary text-sm">Looking up via Binance skills…</div>
+                <div className="chat-bubble chat-bubble-secondary text-sm">Calling the API…</div>
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
-          <div className="px-4 pb-2 flex flex-wrap gap-2">
-            {SUGGESTIONS.map(suggestion => (
-              <button
-                key={suggestion}
-                type="button"
-                className="btn btn-xs btn-ghost border border-base-300"
-                disabled={isSending || configured === false}
-                onClick={() => void send(suggestion)}
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
+          {suggestions.length > 0 && (
+            <div className="px-4 pb-2 flex flex-wrap gap-2">
+              {suggestions.map(suggestion => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  className="btn btn-xs btn-ghost border border-base-300"
+                  disabled={isSending || configured === false}
+                  onClick={() => void send(suggestion)}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
 
           <form onSubmit={onSubmit} className="p-4 pt-2 border-t border-base-300 flex gap-2">
             <input
               className="input input-bordered grow"
               value={input}
               onChange={event => setInput(event.target.value)}
-              placeholder={configured === false ? "Set OPENAI_API_KEY to chat…" : "Ask about a token…"}
+              placeholder={
+                configured === false ? "Set OPENAI_API_KEY to chat…" : "Ask about a token, wallet or borrow…"
+              }
               disabled={isSending || configured === false}
               maxLength={2000}
             />
@@ -243,13 +263,13 @@ const BinanceChatPage: NextPage = () => {
         {error && <p className="text-error text-sm">{error}</p>}
 
         <p className="text-xs opacity-60">
-          Companion to the{" "}
+          Same surface as the{" "}
           <Link className="link" href="/developer-api">
             Developer API
           </Link>{" "}
-          playground. Skills from{" "}
+          playground. Market data comes from{" "}
           <a className="link" href="https://github.com/binance/binance-skills-hub" target="_blank" rel="noreferrer">
-            binance/binance-skills-hub
+            Binance agent skills
           </a>
           .
         </p>

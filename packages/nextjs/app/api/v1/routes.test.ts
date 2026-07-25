@@ -438,8 +438,22 @@ describe("GET /api/v1/binance/chat", () => {
     expect(response.status).toBe(200);
     expect(body).toMatchObject({
       ok: true,
-      data: { configured: false, skill: "query-token-info" },
+      data: { configured: false, toolSource: "GET /api/v1/openapi.json" },
     });
+  });
+
+  it("advertises the API operations it can call and starter prompts, but never itself", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    const response = await getChatStatus(
+      new Request("https://example.test/api/v1/binance/chat", { headers: { "x-forwarded-for": "203.0.113.12" } }),
+    );
+    const { data } = (await response.json()) as {
+      data: { tools: { name: string; method: string; path: string }[]; suggestions: string[] };
+    };
+
+    expect(data.tools.length).toBeGreaterThan(0);
+    expect(data.tools.map(entry => entry.path)).not.toContain("/api/v1/binance/chat");
+    expect(data.suggestions.length).toBeGreaterThan(0);
   });
 });
 
@@ -501,6 +515,8 @@ describe("GET /api/v1/openapi.json", () => {
     expect(document.servers[0].url).toBe("https://example.test");
     expect(Object.keys(document.paths).sort()).toEqual([
       "/api/v1/binance/chat",
+      "/api/v1/binance/token/dynamic",
+      "/api/v1/binance/token/meta",
       "/api/v1/binance/token/search",
       "/api/v1/borrow-risk",
       "/api/v1/borrow-risk/simulate",

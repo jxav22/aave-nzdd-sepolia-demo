@@ -1,22 +1,30 @@
 /**
- * GET  /api/v1/binance/chat — whether OpenAI is configured for the demo chatbot.
- * POST /api/v1/binance/chat — one chat turn with Binance query-token-info tools.
+ * GET  /api/v1/binance/chat — agent status, its toolset, and starter prompts.
+ * POST /api/v1/binance/chat — one chat turn.
  *
- * Binance skill calls are public (no Binance API key). Dialogue needs OPENAI_API_KEY.
+ * The agent's tools are the other operations of this API, called over HTTP (see
+ * `services/agent/apiTools.ts`). Those need no key; the dialogue needs OPENAI_API_KEY.
  */
-import { checkRateLimit, clientIdentifier, rateLimitHeaders } from "~~/services/api/rateLimit";
-import { ApiError, handleOptions, jsonError, jsonOk, withApiErrorHandling } from "~~/services/api/respond";
+import { resolveApiOrigin } from "~~/services/agent/apiTools";
 import {
   ChatUpstreamError,
+  getAgentTools,
   getChatModel,
+  getStarterSuggestions,
   isOpenAiConfigured,
-  runBinanceSkillsChat,
+  runApiAgentChat,
   sanitiseChatMessages,
-} from "~~/services/binance/chat";
+} from "~~/services/agent/chat";
+import { checkRateLimit, clientIdentifier, rateLimitHeaders } from "~~/services/api/rateLimit";
+import { ApiError, handleOptions, jsonError, jsonOk, withApiErrorHandling } from "~~/services/api/respond";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * Lower than the routes it calls: one turn fans out into several of them, and each turn
+ * also spends an OpenAI key that the caller does not own.
+ */
 const RATE_LIMIT_PER_MINUTE = 20;
 
 function rateHeaders(request: Request) {
@@ -39,15 +47,19 @@ export async function GET(request: Request): Promise<Response> {
     );
   }
 
+  const tools = getAgentTools();
+
   return jsonOk(
     {
       configured: isOpenAiConfigured(),
       model: getChatModel(),
-      skill: "query-token-info",
-      tools: ["search_tokens", "get_token_dynamic", "get_token_meta"],
+      toolSource: "GET /api/v1/openapi.json",
+      tools: tools.map(tool => ({ name: tool.name, method: tool.method, path: tool.path })),
+      suggestions: getStarterSuggestions(),
       requires: {
         openaiApiKey: true,
         binanceApiKey: false,
+        walletSignature: false,
       },
       envHint: "Set OPENAI_API_KEY in packages/nextjs/.env.local (optional OPENAI_MODEL, default gpt-4o-mini).",
     },
@@ -68,7 +80,7 @@ export async function POST(request: Request): Promise<Response> {
     if (!isOpenAiConfigured()) {
       throw new ApiError(
         "MISSING_CONFIG",
-        "OPENAI_API_KEY is not set. Add it to packages/nextjs/.env.local to enable the Binance skills chatbot.",
+        "OPENAI_API_KEY is not set. Add it to packages/nextjs/.env.local to enable the chat agent.",
       );
     }
 
@@ -87,8 +99,17 @@ export async function POST(request: Request): Promise<Response> {
       throw new ApiError("INVALID_BODY", error instanceof Error ? error.message : "Invalid messages.", "messages");
     }
 
+    const caller = clientIdentifier(request);
+
     try {
-      const result = await runBinanceSkillsChat(messages);
+      const result = await runApiAgentChat({
+        messages,
+        context: {
+          origin: resolveApiOrigin(request),
+          // Tool calls are rate-limited against the caller, not the server making them.
+          forwardedFor: caller === "unknown" ? null : caller,
+        },
+      });
       return jsonOk(result, { headers });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Chat failed.";

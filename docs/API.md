@@ -19,14 +19,18 @@ Machine-readable spec: [`GET /api/v1/openapi.json`](#get-apiv1openapijson) (Open
 - [`GET /api/v1/position/{address}`](#get-apiv1positionaddress)
 - [`GET /api/v1/market/eth`](#get-apiv1marketeth)
 - [`GET /api/v1/binance/token/search`](#get-apiv1binancetokensearch)
+- [`GET /api/v1/binance/token/dynamic`](#get-apiv1binancetokendynamic)
+- [`GET /api/v1/binance/token/meta`](#get-apiv1binancetokenmeta)
 - [`GET /api/v1/openapi.json`](#get-apiv1openapijson)
+- [Using the API as agent tools](#using-the-api-as-agent-tools)
 - [Requirements for clients](#requirements-for-clients)
 
 ## Interactive demo
 
-In the Scaffold-ETH app, open the **Developer API** tab (`/developer-api`). It exercises every
-v1 route with live forms, summary cards, and the raw response envelope (status, rate-limit
-headers, JSON body).
+In the Scaffold-ETH app, open the **Developer API** tab (`/developer-api`). It exercises the
+main v1 routes with live forms, summary cards, and the raw response envelope (status,
+rate-limit headers, JSON body). The **API Agent** tab (`/binance-chat`) drives the same
+routes from natural language — see [using the API as agent tools](#using-the-api-as-agent-tools).
 
 ## Conventions
 
@@ -299,6 +303,34 @@ naming the skill and upstream endpoint.
 
 ---
 
+## `GET /api/v1/binance/token/dynamic`
+
+Live market data for one token from the same skill: price, 24h change and range, volume,
+liquidity, market cap, holder count. Address the token by chain and contract — search first
+if you only have a symbol.
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `chainId` | yes | `1`, `56`, `8453` or `CT_501`. |
+| `contractAddress` | yes | Token contract, as returned by search. |
+
+```bash
+curl "http://localhost:3000/api/v1/binance/token/dynamic?chainId=1&contractAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+```
+
+---
+
+## `GET /api/v1/binance/token/meta`
+
+Static metadata for one token: name, symbol, decimals, icon, website and socials. Same
+parameters as the dynamic endpoint.
+
+```bash
+curl "http://localhost:3000/api/v1/binance/token/meta?chainId=1&contractAddress=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+```
+
+---
+
 ## `GET /api/v1/openapi.json`
 
 OpenAPI 3.1 description of the whole surface, with `servers[0].url` set from the incoming
@@ -307,6 +339,49 @@ request. Importable into Postman, Insomnia or a codegen client.
 ```bash
 curl "http://localhost:3000/api/v1/openapi.json" > borrow-risk.openapi.json
 ```
+
+Two vendor extensions describe how the app's own chat agent consumes this document:
+`x-agent-tool: false` marks an operation the agent must not call (the chat endpoint, which
+would recurse), and `x-agent-example` carries a natural-language prompt that exercises the
+operation. Both are safe to ignore.
+
+---
+
+## Using the API as agent tools
+
+The chat agent at `/binance-chat` has no private capabilities: its toolset is generated
+from this document at request time, and each tool call is an ordinary HTTP request to the
+endpoints above. Anything it answers, you can reproduce with curl.
+
+```bash
+curl -X POST "http://localhost:3000/api/v1/binance/chat" \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"What is WETH trading at on Ethereum?"}]}'
+```
+
+The response carries the answer plus the calls behind it and follow-up prompts generated
+from the conversation:
+
+```jsonc
+{
+  "ok": true,
+  "data": {
+    "reply": "…",
+    "toolCalls": [
+      { "name": "searchBinanceTokens", "method": "GET",
+        "path": "/api/v1/binance/token/search?q=WETH&chainIds=1", "status": 200, "ok": true }
+    ],
+    "suggestions": ["How deep is WETH liquidity on Base?"],
+    "provenance": { "api": "v1", "toolSource": "GET /api/v1/openapi.json", "tools": ["…"] }
+  }
+}
+```
+
+`POST /api/v1/binance/chat` is the one endpoint that needs configuration — `OPENAI_API_KEY`
+in `packages/nextjs/.env.local` — because it spends an LLM key. `GET` on the same path
+reports whether it is configured and lists the operations the agent may call. Tool calls
+carry the original caller's address, so they are rate-limited against the user rather than
+the server.
 
 ---
 

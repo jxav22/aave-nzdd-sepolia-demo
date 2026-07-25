@@ -6,6 +6,7 @@
  */
 import { ApiError } from "./respond";
 import { type Address, isAddress } from "viem";
+import { ALLOWED_CHAIN_IDS, sanitizeContractAddress } from "~~/services/binance/tokenInfo";
 import { WAD } from "~~/utils/risk/stress";
 
 export const DEFAULT_TARGET_HEALTH_FACTOR_WAD = (WAD * 12n) / 10n;
@@ -131,6 +132,25 @@ export function parseShockList(value: unknown, field = "shocksBps"): number[] | 
     }
     return parsed;
   });
+}
+
+/** Shared parsing for the token lookup routes, which address a token by chain and contract. */
+export function parseTokenLookup(params: URLSearchParams): { chainId: string; contractAddress: string } {
+  const chainId = (params.get("chainId") ?? "").trim();
+  if (!ALLOWED_CHAIN_IDS.has(chainId)) {
+    throw new ApiError(
+      "INVALID_BODY",
+      `Query parameter "chainId" must be one of ${[...ALLOWED_CHAIN_IDS].join(", ")}.`,
+      "chainId",
+    );
+  }
+
+  const contractAddress = sanitizeContractAddress(params.get("contractAddress") ?? undefined);
+  if (!contractAddress) {
+    throw new ApiError("INVALID_BODY", 'Query parameter "contractAddress" is required.', "contractAddress");
+  }
+
+  return { chainId, contractAddress };
 }
 
 export async function parseJsonBody(request: Request): Promise<Record<string, unknown>> {

@@ -244,7 +244,7 @@ packages/nextjs/                    ← the entire product
     mnzd/page.tsx                   ← PRIMARY product page
     aave/page.tsx                   ← official Aave Sepolia EURS reference, hidden from nav
     developer-api/page.tsx          ← interactive playground for the public API
-    binance-chat/page.tsx           ← LLM chat demo, needs OPENAI_API_KEY
+    binance-chat/page.tsx           ← LLM chat demo over the public API, needs OPENAI_API_KEY
     api/v1/**                       ← the public REST API
     page.tsx                        ← still the stock Scaffold-ETH landing page
     debug/, blockexplorer/          ← Scaffold defaults; blockexplorer is localhost-only
@@ -259,6 +259,9 @@ packages/nextjs/                    ← the entire product
     risk/assistant.ts               ← report assembly (deterministic, no LLM)
     risk/simulate.ts                ← stateless BYO-position simulation
     binance/ethMarket.ts            ← ETH price + volatility, 60s cache
+    binance/tokenInfo.ts            ← query-token-info search / dynamic / meta
+    agent/apiTools.ts               ← turns the OpenAPI doc into the chat agent's tools
+    agent/chat.ts                   ← chat turn: tool loop over /api/v1 + follow-up prompts
     api/{respond,validate,rateLimit,openapi}.ts
   utils/
     aave/{amount,errors}.ts         ← unit parsing, Aave revert-code mapping
@@ -332,7 +335,7 @@ handle it in `bigint` throughout, and `utils/risk/stress.test.ts` covers the edg
 
 ### The public API
 
-Seven routes under `/api/v1`, fully documented in `docs/API.md` with an OpenAPI 3.1 spec at
+Nine routes under `/api/v1`, fully documented in `docs/API.md` with an OpenAPI 3.1 spec at
 `/api/v1/openapi.json`. Shared envelope `{ ok, schemaVersion, data | error }`, open CORS,
 in-memory per-IP rate limiting, and chain quantities as `{ raw, decimals, formatted }` decimal
 strings rather than JSON numbers.
@@ -344,11 +347,18 @@ strings rather than JSON numbers.
 | `GET /position/{address}` | Raw Aave read, including the liquidation threshold the UI hooks discard |
 | `GET /market/eth` | Binance ETH context and derived scenarios. No RPC involved |
 | `GET /binance/token/search` | Proxy to the public Binance token search |
-| `GET|POST /binance/chat` | LLM chat demo |
+| `GET /binance/token/dynamic` | Live price, volume, liquidity and holders for one token |
+| `GET /binance/token/meta` | Name, decimals, website and socials for one token |
+| `GET|POST /binance/chat` | LLM chat demo whose tools are the routes above |
 | `GET /openapi.json` | Spec |
 
-Two design decisions here are worth preserving because they are better than they look:
+Three design decisions here are worth preserving because they are better than they look:
 
+- **The chat agent's tools are generated from the OpenAPI document and called over HTTP.**
+  `services/agent/apiTools.ts` reads `buildOpenApiDocument()`, so a documented operation
+  becomes a tool with no further work, and the agent can only do what the published contract
+  does. Operations opt out with `x-agent-tool: false` and supply a starter prompt with
+  `x-agent-example`.
 - **Binance being unreachable is not an error.** The response degrades to fixed reference
   shocks with `degraded: true` so an integrator's tool keeps working. Surface that flag.
 - **`selfCheck`** recomputes the health factor from decomposed collateral legs and compares it

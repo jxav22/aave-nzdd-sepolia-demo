@@ -1,6 +1,11 @@
 /**
  * OpenAPI 3.1 description of the public v1 API, served at /api/v1/openapi.json so the
  * surface can be imported into Postman, Insomnia or a codegen client.
+ *
+ * Two vendor extensions drive the chat agent, which builds its tools from this document
+ * rather than from a hand-maintained list (see `services/agent/apiTools.ts`):
+ *   x-agent-tool: false   omit the operation from the agent's toolset
+ *   x-agent-example       a natural-language prompt that exercises the operation
  */
 import { SCHEMA_VERSION } from "./respond";
 import { aaveHackathonMnzdConfig } from "~~/config/aaveHackathonMnzd";
@@ -53,6 +58,7 @@ export function buildOpenApiDocument(origin: string) {
             "Binance Skill for ETH market context, and returns projected health factors under several declines. " +
             "The response includes a `steps` trace showing each tool the agent invoked.",
           operationId: "getBorrowRisk",
+          "x-agent-example": "Stress-test a 400 dNZD borrow for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
           parameters: [
             {
               name: "address",
@@ -103,6 +109,7 @@ export function buildOpenApiDocument(origin: string) {
             "market, so any Aave-compatible position expressed in a shared base currency can be assessed.\n\n" +
             "Supplying `shocksBps` skips the Binance call entirely and makes the response fully deterministic.",
           operationId: "simulateBorrowRisk",
+          "x-agent-example": "Simulate 1 wETH of collateral carrying 1200 of debt if ETH falls 20%",
           requestBody: {
             required: true,
             content: {
@@ -130,6 +137,7 @@ export function buildOpenApiDocument(origin: string) {
             "Account data, per-reserve oracle prices and liquidation thresholds, supplied balances, and the " +
             "borrow reserve's available liquidity.",
           operationId: "getPosition",
+          "x-agent-example": "Show the Aave position for 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
           parameters: [
             {
               name: "address",
@@ -158,6 +166,7 @@ export function buildOpenApiDocument(origin: string) {
             "Cached for 60 seconds. Returns `provenance.degraded = true` rather than an error when Binance is " +
             "unreachable.",
           operationId: "getEthMarket",
+          "x-agent-example": "How volatile has ETH been lately?",
           responses: {
             "200": {
               description: "Market context.",
@@ -175,6 +184,7 @@ export function buildOpenApiDocument(origin: string) {
             "Proxies the public Binance Web3 `query-token-info` search skill. No authentication. " +
             "Optional `chainIds` is allowlisted to Ethereum, BSC, Base, and Solana.",
           operationId: "searchBinanceTokens",
+          "x-agent-example": "Find WETH on Ethereum",
           parameters: [
             {
               name: "q",
@@ -202,11 +212,86 @@ export function buildOpenApiDocument(origin: string) {
           },
         },
       },
+      "/api/v1/binance/token/dynamic": {
+        get: {
+          summary: "Live market data for one token (query-token-info dynamic)",
+          description:
+            "Proxies the public Binance Web3 `query-token-info` dynamic skill: price, 24h change and range, " +
+            "24h volume, liquidity, market cap and holder count. No authentication.",
+          operationId: "getBinanceTokenDynamic",
+          "x-agent-example": "What is BNB trading at on BSC, and how deep is its liquidity?",
+          parameters: [
+            {
+              name: "chainId",
+              in: "query",
+              required: true,
+              schema: { type: "string", enum: ["1", "56", "8453", "CT_501"] },
+              description: "Ethereum=1, BSC=56, Base=8453, Solana=CT_501.",
+            },
+            {
+              name: "contractAddress",
+              in: "query",
+              required: true,
+              schema: { type: "string", maxLength: 128 },
+              description: "Token contract address, as returned by the search operation.",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Token market data.",
+              headers: rateLimitHeaders,
+              content: { "application/json": { schema: { $ref: "#/components/schemas/SuccessEnvelope" } } },
+            },
+            "400": errorResponse,
+            "429": errorResponse,
+            "502": errorResponse,
+          },
+        },
+      },
+      "/api/v1/binance/token/meta": {
+        get: {
+          summary: "Static token metadata (query-token-info meta)",
+          description:
+            "Proxies the public Binance Web3 `query-token-info` meta skill: name, symbol, decimals, icon, " +
+            "website and social links. No authentication.",
+          operationId: "getBinanceTokenMeta",
+          "x-agent-example": "Who is behind WETH, and where is its website?",
+          parameters: [
+            {
+              name: "chainId",
+              in: "query",
+              required: true,
+              schema: { type: "string", enum: ["1", "56", "8453", "CT_501"] },
+              description: "Ethereum=1, BSC=56, Base=8453, Solana=CT_501.",
+            },
+            {
+              name: "contractAddress",
+              in: "query",
+              required: true,
+              schema: { type: "string", maxLength: 128 },
+              description: "Token contract address, as returned by the search operation.",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Token metadata.",
+              headers: rateLimitHeaders,
+              content: { "application/json": { schema: { $ref: "#/components/schemas/SuccessEnvelope" } } },
+            },
+            "400": errorResponse,
+            "429": errorResponse,
+            "502": errorResponse,
+          },
+        },
+      },
       "/api/v1/binance/chat": {
         get: {
-          summary: "Binance skills chatbot status",
-          description: "Reports whether OPENAI_API_KEY is configured. Binance skill tools need no key.",
+          summary: "Chat agent status and starter prompts",
+          description:
+            "Reports whether OPENAI_API_KEY is configured, which API operations the agent can call, and a set " +
+            "of starter prompts derived from this document. The API operations themselves need no key.",
           operationId: "getBinanceChatStatus",
+          "x-agent-tool": false,
           responses: {
             "200": {
               description: "Configuration status.",
@@ -217,10 +302,13 @@ export function buildOpenApiDocument(origin: string) {
           },
         },
         post: {
-          summary: "Binance skills chatbot turn",
+          summary: "One chat turn against the agent",
           description:
-            "OpenAI tool-calling over public query-token-info (search / meta / dynamic). Requires OPENAI_API_KEY.",
+            "OpenAI tool-calling where every tool is an operation in this document, invoked over HTTP against " +
+            "this same API. The reply carries the calls the agent made and follow-up prompts generated from the " +
+            "conversation. Requires OPENAI_API_KEY.",
           operationId: "postBinanceChat",
+          "x-agent-tool": false,
           requestBody: {
             required: true,
             content: {

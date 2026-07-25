@@ -37,7 +37,7 @@ export const menuLinks: HeaderMenuLink[] = [
     icon: <CpuChipIcon className="h-4 w-4" />,
   },
   {
-    label: "Skills Chat",
+    label: "API Agent",
     href: "/binance-chat",
     icon: <ChatBubbleLeftRightIcon className="h-4 w-4" />,
   },
