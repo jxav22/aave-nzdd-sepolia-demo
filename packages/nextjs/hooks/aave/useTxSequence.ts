@@ -3,16 +3,15 @@
 import { useCallback, useRef, useState } from "react";
 
 /**
- * Runs a series of dependent transactions as one user action, exposing per-step status.
+ * Runs one or more transactions as a single user action, exposing per-step status.
  *
- * The protocol requires approve-then-supply and approve-then-repay as separate signatures.
- * That is a protocol constraint, not a thing the person depositing should have to reason
- * about, so this drives them in order behind a single button and reports where the sequence
- * is. Each step's `run` is an existing tested write path — nothing here talks to a contract
- * itself, so the sequencing cannot diverge from the single-action behaviour.
+ * Approve and the follow-on write (supply / repay) must stay separate user clicks — chaining
+ * them here races the allowance refresh and breaks embedded-wallet signing. Use this for a
+ * single write, or for steps that do not depend on a just-updated allowance.
  *
- * A failed step stops the sequence and leaves its error in place; earlier confirmed steps
- * stay confirmed, because on-chain they are.
+ * Each step's `run` is an existing tested write path — nothing here talks to a contract
+ * itself. A failed step stops the sequence and leaves its error in place; earlier confirmed
+ * steps stay confirmed, because on-chain they are.
  */
 
 export type TxStepStatus = "pending" | "active" | "confirmed" | "failed" | "skipped";
@@ -20,7 +19,7 @@ export type TxStepStatus = "pending" | "active" | "confirmed" | "failed" | "skip
 export type TxStepSpec = {
   id: string;
   label: string;
-  /** Return false to skip — e.g. an allowance that already covers the amount. */
+  /** Return false to skip — e.g. an optional cleanup step. Do not use to chain approve-then-supply. */
   shouldRun?: () => boolean;
   run: () => Promise<unknown>;
 };

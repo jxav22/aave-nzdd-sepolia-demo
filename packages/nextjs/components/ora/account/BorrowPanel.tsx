@@ -27,10 +27,13 @@ import { formatBase, formatNzd, formatPercent, formatToken, formatTokenBare } fr
 /**
  * Borrowing New Zealand dollars against ETH or Bitcoin collateral.
  *
- * Two ordered steps on one surface: deposit collateral, then borrow against it. The
- * consequences of borrowing against a volatile asset are stated in plain words directly above
- * the borrow action and are never collapsed — someone new to this has to be able to see, before
- * committing, that a large enough fall costs them the collateral.
+ * Two ordered steps on one surface: deposit collateral, then borrow against it. Allowing the
+ * market to move tokens and depositing / repaying are also separate confirmations — chaining
+ * them breaks embedded-wallet signing and can race the allowance refresh.
+ *
+ * The consequences of borrowing against a volatile asset are stated in plain words directly
+ * above the borrow action and are never collapsed — someone new to this has to be able to see,
+ * before committing, that a large enough fall costs them the collateral.
  *
  * Borrowing capacity and available liquidity are shown as separate figures throughout. They are
  * different constraints, and a borrow within your capacity still fails if the pool has nothing
@@ -129,21 +132,34 @@ export const BorrowPanel = ({
 
   const report = liveRisk.report;
 
-  const runDepositCollateral = async () => {
+  const collateralNeedsApproval = (() => {
+    if (!collateralAmount.trim()) return false;
+    try {
+      return parseTokenAmount(collateralAmount, collateralPosition.decimals) > collateralActions.state.allowance;
+    } catch {
+      return true;
+    }
+  })();
+
+  const runApproveCollateral = async () => {
     const amount = collateralAmount;
     const ok = await collateralSequence.run([
       {
         id: "approve",
         label: `Allow the market to move your ${COLLATERAL_LABEL[collateralSymbol]}`,
-        shouldRun: () => {
-          try {
-            return parseTokenAmount(amount, collateralPosition.decimals) > collateralActions.state.allowance;
-          } catch {
-            return true;
-          }
-        },
         run: () => collateralActions.approve(amount),
       },
+    ]);
+
+    if (ok) {
+      onRefresh();
+      collateralActions.refresh();
+    }
+  };
+
+  const runDepositCollateral = async () => {
+    const amount = collateralAmount;
+    const ok = await collateralSequence.run([
       {
         id: "deposit",
         label: `Deposit ${amount} ${collateralSymbol === "wETH" ? "ETH" : "BTC"} as collateral`,
@@ -190,21 +206,35 @@ export const BorrowPanel = ({
     }
   };
 
-  const runRepay = async (all: boolean) => {
-    const amount = all ? debtBare : repayAmount;
+  /** One allowance covering full debt is enough for partial or full repay. */
+  const repayNeedsApproval =
+    nzdPosition.borrowed > 0n &&
+    (() => {
+      try {
+        return parseTokenAmount(debtBare, nzdDecimals) > nzdActions.state.allowance;
+      } catch {
+        return true;
+      }
+    })();
+
+  const runApproveRepay = async () => {
     const ok = await repaySequence.run([
       {
         id: "approve",
         label: "Allow the market to collect your repayment",
-        shouldRun: () => {
-          try {
-            return parseTokenAmount(amount, nzdDecimals) > nzdActions.state.allowance;
-          } catch {
-            return true;
-          }
-        },
-        run: () => nzdActions.approve(amount),
+        run: () => nzdActions.approve(debtBare),
       },
+    ]);
+
+    if (ok) {
+      onRefresh();
+      nzdActions.refresh();
+    }
+  };
+
+  const runRepay = async (all: boolean) => {
+    const amount = all ? debtBare : repayAmount;
+    const ok = await repaySequence.run([
       {
         id: "repay",
         label: all ? "Repay everything you owe" : `Repay ${formatNzd(parseSafe(amount, nzdDecimals), nzdDecimals)}`,
@@ -274,10 +304,33 @@ export const BorrowPanel = ({
             />
           </div>
 
-          <div className="mt-5">
+          {collateralNeedsApproval ? (
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+              First allow the market to move your {COLLATERAL_LABEL[collateralSymbol]}, then deposit. Each is a separate
+              confirmation in your wallet.
+            </p>
+          ) : null}
+
+          <div className={`${collateralNeedsApproval ? "mt-4" : "mt-5"} flex flex-col gap-3`}>
+            {collateralNeedsApproval ? (
+              <ActionButton
+                onClick={runApproveCollateral}
+                disabled={!collateralAmount.trim() || Boolean(collateralError) || !positions.isCorrectNetwork}
+                busy={collateralSequence.isRunning}
+                full
+              >
+                Allow {COLLATERAL_LABEL[collateralSymbol]}
+              </ActionButton>
+            ) : null}
             <ActionButton
+              tone={collateralNeedsApproval ? "outline" : "primary"}
               onClick={runDepositCollateral}
-              disabled={!collateralAmount.trim() || Boolean(collateralError) || !positions.isCorrectNetwork}
+              disabled={
+                !collateralAmount.trim() ||
+                Boolean(collateralError) ||
+                !positions.isCorrectNetwork ||
+                collateralNeedsApproval
+              }
               busy={collateralSequence.isRunning}
               full
             >
@@ -567,10 +620,27 @@ export const BorrowPanel = ({
                 <DataRow label="Available to repay with" value={formatNzd(nzdPosition.walletBalance, nzdDecimals)} />
                 <DataRow label="Interest rate" value={formatPercent(nzdReserve?.borrowApyPercent ?? 0)} />
               </div>
+              {repayNeedsApproval ? (
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  First allow the market to collect the repayment, then repay. Each is a separate confirmation.
+                </p>
+              ) : null}
               <div className="flex flex-wrap gap-3">
+                {repayNeedsApproval ? (
+                  <ActionButton
+                    onClick={runApproveRepay}
+                    disabled={!positions.isCorrectNetwork}
+                    busy={repaySequence.isRunning}
+                  >
+                    Allow repayment
+                  </ActionButton>
+                ) : null}
                 <ActionButton
+                  tone={repayNeedsApproval ? "outline" : "primary"}
                   onClick={() => runRepay(false)}
-                  disabled={!repayAmount.trim() || Boolean(repayError) || !positions.isCorrectNetwork}
+                  disabled={
+                    !repayAmount.trim() || Boolean(repayError) || !positions.isCorrectNetwork || repayNeedsApproval
+                  }
                   busy={repaySequence.isRunning}
                 >
                   Repay
@@ -578,7 +648,7 @@ export const BorrowPanel = ({
                 <ActionButton
                   tone="outline"
                   onClick={() => runRepay(true)}
-                  disabled={!positions.isCorrectNetwork}
+                  disabled={!positions.isCorrectNetwork || repayNeedsApproval}
                   busy={repaySequence.isRunning}
                 >
                   Repay everything

@@ -19,8 +19,9 @@ import { formatNzd, formatPercent, formatTokenBare } from "~~/utils/format/money
  * NZD to earn cannot be liquidated, so none of that applies to them and showing it would only
  * frighten people for no reason.
  *
- * Depositing needs two signatures on-chain. That is a protocol constraint, not something the
- * depositor should have to understand, so both run behind one button with visible progress.
+ * Allowing the market to move dollars and depositing are two separate confirmations. Chaining
+ * them in one click breaks embedded-wallet signing and can race the allowance refresh, so each
+ * stays its own step.
  */
 
 export const EarnPanel = ({
@@ -52,30 +53,38 @@ export const EarnPanel = ({
     message: "More than you have deposited.",
   });
 
-  const canDeposit = Boolean(depositAmount.trim()) && !depositError && actions.state.isCorrectNetwork;
+  const canAct = Boolean(depositAmount.trim()) && !depositError && actions.state.isCorrectNetwork;
   const canWithdraw = Boolean(withdrawAmount.trim()) && !withdrawError && actions.state.isCorrectNetwork;
 
-  /**
-   * Approval is skipped when the existing allowance already covers the amount, so a repeat
-   * deposit is a single signature rather than two.
-   */
-  const needsApproval = () => {
+  /** True when the typed amount is above the current on-chain allowance. */
+  const needsApproval = (() => {
+    if (!depositAmount.trim()) return false;
     try {
       return parseTokenAmount(depositAmount, decimals) > actions.state.allowance;
     } catch {
       return true;
+    }
+  })();
+
+  const runApprove = async () => {
+    const amount = depositAmount;
+    const ok = await sequence.run([
+      {
+        id: "approve",
+        label: `Allow the market to move ${formatNzd(parseSafe(amount, decimals), decimals)}`,
+        run: () => actions.approve(amount),
+      },
+    ]);
+
+    if (ok) {
+      onRefresh();
+      actions.refresh();
     }
   };
 
   const runDeposit = async () => {
     const amount = depositAmount;
     const ok = await sequence.run([
-      {
-        id: "approve",
-        label: `Allow the market to move ${formatNzd(parseSafe(amount, decimals), decimals)}`,
-        shouldRun: needsApproval,
-        run: () => actions.approve(amount),
-      },
       {
         id: "deposit",
         label: `Deposit ${formatNzd(parseSafe(amount, decimals), decimals)}`,
@@ -135,8 +144,26 @@ export const EarnPanel = ({
           />
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <ActionButton onClick={runDeposit} disabled={!canDeposit} busy={sequence.isRunning}>
+        {needsApproval ? (
+          <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
+            First allow the market to move the amount, then deposit. Each is a separate confirmation in your wallet.
+          </p>
+        ) : null}
+
+        <div className={`${needsApproval ? "mt-4" : "mt-6"} flex flex-wrap items-center gap-3`}>
+          {needsApproval ? (
+            <ActionButton onClick={runApprove} disabled={!canAct} busy={sequence.isRunning}>
+              {depositAmount.trim() && !depositError
+                ? `Allow ${formatNzd(parseSafe(depositAmount, decimals), decimals)}`
+                : "Allow the market"}
+            </ActionButton>
+          ) : null}
+          <ActionButton
+            tone={needsApproval ? "outline" : "primary"}
+            onClick={runDeposit}
+            disabled={!canAct || needsApproval}
+            busy={sequence.isRunning}
+          >
             {depositAmount.trim() && !depositError
               ? `Deposit ${formatNzd(parseSafe(depositAmount, decimals), decimals)}`
               : "Deposit"}
