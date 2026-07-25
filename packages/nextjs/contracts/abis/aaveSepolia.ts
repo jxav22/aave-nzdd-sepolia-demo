@@ -1,5 +1,6 @@
 /**
- * Minimal ABIs for Aave V3 Sepolia Pool, underlying ERC-20, and aToken.
+ * Minimal ABIs for Aave V3 Pool, underlying ERC-20, aToken, and mintable testnet ERC-20.
+ * Shared by the official Sepolia EURS market and the hackathon mNZD market.
  * Kept small on purpose — do not pull full protocol ABIs.
  */
 
@@ -107,6 +108,78 @@ export const erc20Abi = [
     stateMutability: "view",
     inputs: [],
     outputs: [{ name: "", type: "string" }],
+  },
+] as const;
+
+/** TestnetERC20 (Ownable) — used by hackathon mNZD for owner faucet minting. */
+export const mintableErc20Abi = [
+  {
+    type: "function",
+    name: "approve",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "allowance",
+    stateMutability: "view",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "decimals",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8" }],
+  },
+  {
+    type: "function",
+    name: "symbol",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    type: "function",
+    name: "owner",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "mint",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "value", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "error",
+    name: "OwnableUnauthorizedAccount",
+    inputs: [{ name: "account", type: "address" }],
+  },
+  {
+    type: "error",
+    name: "OwnableInvalidOwner",
+    inputs: [{ name: "owner", type: "address" }],
   },
 ] as const;
 

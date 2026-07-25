@@ -1,0 +1,19 @@
+{
+  "aToken": "0xA4c4E7eb3Cb6fc54CBa7b0B08549143bB7cF7DB8",
+  "aaveOracle": "0x79054dbB96Ca2d091e3B157970D8A2384e1473Ef",
+  "aclManager": "0x481230241FE711c54D3DB2172E95B66a08234098",
+  "chainId": 11155111,
+  "configEngine": "0x6aFCfDf407acAE43100D2786f0383cFaB47eA1aE",
+  "marketId": "Web3NZ Hackathon mNZD Market",
+  "notes": "Stand-in ERC-20 for NewMoney NZD stable. Not real NZDD/dNZD/zNZD.",
+  "pool": "0xB0ce61547bdd38139f7F764E7171Cd048323CC69",
+  "poolAddressesProvider": "0x2950597Bd526eB285b772f06654924bFa0b817f8",
+  "priceFeed": "0x9956e5C7994bF0d0343Cdab4025985D6B8053F44",
+  "protocolDataProvider": "0xb5565F196F185c74370FdE81b2422d7D5d2b2bF4",
+  "underlying": {
+    "address": "0xDf40C406e03a0fA6D4bE26F96Ca3A7E6fE9baeeC",
+    "decimals": 6,
+    "symbol": "mNZD"
+  },
+  "variableDebtToken": "0x0B27c6229F90ed3BA9Af911cd607198924458E6A"
+}

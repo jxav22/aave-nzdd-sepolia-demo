@@ -24,10 +24,10 @@ The reusable hook for other engineers is `useAaveSepolia`.
 
 | Approach | This project |
 |----------|--------------|
-| Connect to existing Aave V3 Sepolia Pool + assets from `@aave-dao/aave-address-book` | Yes |
-| Deploy your own Aave market / Pool / oracles | No |
+| Connect to existing Aave V3 Sepolia Pool + assets from `@aave-dao/aave-address-book` | Yes (`/aave`) |
+| Deploy your own Aave market / Pool / oracles | Deploy lives in aave-v3-origin; UI at `/mnzd` |
 
-Addresses are resolved at build/runtime from the official address book — not copied from blogs or tutorials.
+Addresses for the official EURS market are resolved from the address book. The custom hackathon mNZD market is documented in [AAVE_HACKATHON_MNZD.md](./AAVE_HACKATHON_MNZD.md).
 
 ## 4. Required environment variables
 

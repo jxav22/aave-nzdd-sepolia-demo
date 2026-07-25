@@ -78,6 +78,10 @@ This repo includes a minimal frontend integration with the **official Aave V3 ma
 
 Open the UI at `/aave` after `yarn start`. Required RPC env var: `ALCHEMY_API_KEY` in `packages/nextjs/.env.local`.
 
+### Hackathon mNZD market
+
+A second tab at `/mnzd` talks to the custom Aave V3 + mNZD market deployed from aave-v3-origin (not official EURS). See [docs/AAVE_HACKATHON_MNZD.md](docs/AAVE_HACKATHON_MNZD.md).
+
 ## Documentation
 
 Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
