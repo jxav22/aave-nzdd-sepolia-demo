@@ -5,7 +5,7 @@ export const WITHDRAW_ALL_AMOUNT = maxUint256;
 /** Aave Pool.repay accepts maxUint256 to clear the full variable debt. */
 export const REPAY_ALL_AMOUNT = maxUint256;
 
-/** Aave base currency (USD) uses 8 decimals in getUserAccountData. */
+/** The market's base currency uses 8 decimals in getUserAccountData. */
 export const AAVE_BASE_CURRENCY_DECIMALS = 8;
 
 export type ParseAmountErrorCode = "EMPTY" | "INVALID" | "NEGATIVE" | "ZERO" | "EXCESS_DECIMALS";
@@ -93,7 +93,7 @@ export function formatHealthFactor(healthFactor: bigint): string {
   }
 }
 
-/** Format Aave getUserAccountData base-currency amounts (8 decimals, USD). */
+/** Format Aave getUserAccountData base-currency amounts (8 decimals). */
 export function formatAaveBaseAmount(value: bigint): string {
   try {
     return formatUnits(value, AAVE_BASE_CURRENCY_DECIMALS);

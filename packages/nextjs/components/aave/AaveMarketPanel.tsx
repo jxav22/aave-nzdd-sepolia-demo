@@ -1,6 +1,7 @@
 "use client";
 
 import { formatAaveBaseAmount, formatHealthFactor } from "~~/utils/aave/amount";
+import { BASE_CURRENCY } from "~~/utils/format/money";
 
 export type AaveMarketPanelProps = {
   symbol: string;
@@ -90,7 +91,7 @@ export const AaveMarketPanel = ({
           <div className="font-mono text-lg">{isReading ? "…" : formatHealthFactor(healthFactor)}</div>
         </div>
         <div>
-          <div className="opacity-70">Available to borrow (USD base)</div>
+          <div className="opacity-70">Available to borrow ({BASE_CURRENCY.code} base)</div>
           <div className="font-mono text-lg">{isReading ? "…" : formatAaveBaseAmount(availableBorrowsBase)}</div>
         </div>
       </div>

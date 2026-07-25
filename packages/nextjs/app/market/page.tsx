@@ -102,7 +102,7 @@ const MarketPage: NextPage = () => {
         </div>
 
         <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-          {`Rates are variable and recalculated by the lending pool as deposits and loans change. Prices are quoted in ${BASE_CURRENCY.code} by the market's price oracle; New Zealand dollar balances are shown in NZD.`}
+          {`Rates are variable and recalculated by the lending pool as deposits and loans change. Every figure on this page is quoted in ${BASE_CURRENCY.code}, the market's unit of account, using prices from its own oracle.`}
           {blockNumber ? ` Read at block ${blockNumber.toString()}.` : ""}
         </p>
 

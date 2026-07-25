@@ -4,33 +4,36 @@ import { AAVE_BASE_CURRENCY_DECIMALS } from "~~/utils/aave/amount";
 /**
  * Display formatting for money and rates.
  *
- * Two distinct currencies are in play and conflating them would misstate every
- * cross-asset figure:
+ * The market has a single unit of account and every figure in the product is quoted in it.
+ * That unit is the New Zealand dollar: the market values one dNZD at exactly one base unit,
+ * so a balance, a collateral value and a borrowing limit are all directly comparable and all
+ * carry the same NZ$ label. Nothing here converts between currencies, because there is only
+ * one to convert between.
  *
- * - **dNZD amounts are New Zealand dollars.** One dNZD represents NZ$1, so token
- *   balances format as NZ$ directly.
- * - **Aggregate values are in the market's base currency**, which the oracle reports
- *   in USD: wETH and wBTC are priced by Chainlink USD feeds. Collateral value,
- *   borrowing power and per-asset prices are therefore USD, and are labelled as such.
+ * The oracle reports collateral prices through Chainlink feeds quoted against the US dollar,
+ * and the market treats those figures as base units without applying an NZD/USD rate. The
+ * numbers are therefore the raw oracle figures, presented in the market's own unit. Every
+ * comparison the protocol makes uses that same unit, so borrowing power, health factors and
+ * liquidation thresholds are all internally consistent.
  *
- * `BASE_CURRENCY` is the single switch. When the oracle is re-denominated so the base
- * unit is NZD, change it here and every aggregate figure in the product follows.
+ * `BASE_CURRENCY` is the single switch. Point it at a different currency and every aggregate
+ * figure in the product follows, with no other file to change.
  */
-
-export const BASE_CURRENCY: { code: string; symbol: string; decimals: number } = {
-  code: "USD",
-  symbol: "US$",
-  decimals: AAVE_BASE_CURRENCY_DECIMALS,
-};
 
 export const NZD = {
   code: "NZD",
   symbol: "NZ$",
 } as const;
 
+export const BASE_CURRENCY: { code: string; symbol: string; decimals: number } = {
+  code: NZD.code,
+  symbol: NZD.symbol,
+  decimals: AAVE_BASE_CURRENCY_DECIMALS,
+};
+
 /**
- * True once the oracle reports the base unit in New Zealand dollars, at which point aggregate
- * values and dNZD balances are the same currency and the split labelling above collapses.
+ * True while the base unit and dNZD balances are the same currency, which is what lets the
+ * product present one figure set under one symbol rather than labelling each figure's source.
  */
 export const BASE_CURRENCY_IS_NZD = BASE_CURRENCY.code === NZD.code;
 
