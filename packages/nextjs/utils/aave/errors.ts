@@ -1,5 +1,6 @@
 import { ParseAmountError } from "~~/utils/aave/amount";
 import { getParsedError } from "~~/utils/scaffold-eth";
+import { replacer } from "~~/utils/scaffold-eth/common";
 
 /** Aave V3 variable debt interest rate mode. */
 export const VARIABLE_INTEREST_RATE_MODE = 2n;
@@ -15,7 +16,14 @@ export function mapAaveTxError(error: unknown, fallback: string, options?: { own
 
   const message = getParsedError(error);
   const lower = message.toLowerCase();
-  const raw = typeof error === "object" && error !== null ? JSON.stringify(error) : String(error ?? "");
+  // viem/wagmi errors often carry bigint fields; stringify without a replacer throws
+  // "Do not know how to serialize a BigInt" and that becomes the user-facing message.
+  let raw = "";
+  try {
+    raw = typeof error === "object" && error !== null ? JSON.stringify(error, replacer) : String(error ?? "");
+  } catch {
+    raw = String(error ?? "");
+  }
   const combined = `${message}\n${raw}`.toLowerCase();
 
   if (lower.includes("user rejected") || lower.includes("user denied") || lower.includes("rejected the request")) {

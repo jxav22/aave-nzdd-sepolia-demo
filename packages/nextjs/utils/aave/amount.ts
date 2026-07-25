@@ -5,6 +5,13 @@ export const WITHDRAW_ALL_AMOUNT = maxUint256;
 /** Aave Pool.repay accepts maxUint256 to clear the full variable debt. */
 export const REPAY_ALL_AMOUNT = maxUint256;
 
+/**
+ * Extra allowance headroom for repay(maxUint256): 2% of debt + 1 base unit.
+ * Aave pulls debt at execution after accrual; exact-debt approval reverts.
+ * Does not change the amount passed to Pool.repay.
+ */
+const REPAY_APPROVAL_BUFFER_DIVISOR = 50n;
+
 /** The market's base currency uses 8 decimals in getUserAccountData. */
 export const AAVE_BASE_CURRENCY_DECIMALS = 8;
 
@@ -70,6 +77,33 @@ export function isWithdrawAllAmount(amount: bigint): boolean {
 
 export function isRepayAllAmount(amount: bigint): boolean {
   return amount === REPAY_ALL_AMOUNT;
+}
+
+/**
+ * Allowance to request before a full (or debt-sized) repay.
+ *
+ * Returns debt plus a small buffer so `repay(maxUint256)` can pull post-accrual
+ * debt. Approving above wallet balance is valid ERC-20; the buffer is only
+ * capped when the wallet already holds a surplus below the full buffer
+ * (best-effort headroom). Callers must still disable repay-all when
+ * `walletBalance < debt`.
+ */
+export function repayApprovalAmount(debt: bigint, walletBalance: bigint): bigint {
+  if (debt <= 0n) {
+    return 0n;
+  }
+
+  const buffered = debt + debt / REPAY_APPROVAL_BUFFER_DIVISOR + 1n;
+
+  if (walletBalance >= buffered) {
+    return buffered;
+  }
+
+  if (walletBalance > debt) {
+    return walletBalance;
+  }
+
+  return buffered;
 }
 
 /**

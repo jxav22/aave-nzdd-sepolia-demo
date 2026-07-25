@@ -22,7 +22,7 @@ import { useBorrowRisk } from "~~/hooks/aave/useBorrowRisk";
 import type { ReserveSummary } from "~~/hooks/aave/useHackathonMarket";
 import { useTxSequence } from "~~/hooks/aave/useTxSequence";
 import type { UserPositions } from "~~/hooks/aave/useUserPositions";
-import { parseTokenAmount } from "~~/utils/aave/amount";
+import { parseTokenAmount, repayApprovalAmount } from "~~/utils/aave/amount";
 import { formatBase, formatNzd, formatPercent, formatToken, formatTokenBare } from "~~/utils/format/money";
 
 /**
@@ -123,6 +123,11 @@ export const BorrowPanel = ({
     message: "More than you owe.",
   });
 
+  /** Allowance sized for Aave's post-accrual repay(max) pull — not the repay amount itself. */
+  const repayApprovalRaw = repayApprovalAmount(nzdPosition.borrowed, nzdPosition.walletBalance);
+  const repayApprovalBare = formatTokenBare(repayApprovalRaw, nzdDecimals);
+  const canRepayEverything = nzdPosition.walletBalance >= nzdPosition.borrowed;
+
   const liveRisk = useBorrowRisk({
     address,
     borrowAmount: borrowAmount.trim() || "0",
@@ -212,23 +217,19 @@ export const BorrowPanel = ({
     liveRisk.refetch();
   };
 
-  /** Step 1 done when allowance covers full debt (enough for partial or full repay). */
-  const repayAllowanceReady =
-    nzdPosition.borrowed > 0n &&
-    (() => {
-      try {
-        return parseTokenAmount(debtBare, nzdDecimals) <= nzdActions.state.allowance;
-      } catch {
-        return false;
-      }
-    })();
+  /**
+   * Step 1 done when hook allowance covers the buffered approval amount.
+   * Use nzdActions.state.allowance (single source): approve awaits refetchAllowance there,
+   * so Step 2 unlocks immediately instead of waiting on the positions multicall.
+   */
+  const repayAllowanceReady = nzdPosition.borrowed > 0n && nzdActions.state.allowance >= repayApprovalRaw;
 
   const runApproveRepay = async () => {
     const ok = await repaySequence.run([
       {
         id: "approve",
         label: "Allow the market to collect your repayment",
-        run: () => nzdActions.approve(debtBare),
+        run: () => nzdActions.approve(repayApprovalBare),
       },
     ]);
 
@@ -664,11 +665,16 @@ export const BorrowPanel = ({
                   <ActionButton
                     tone="outline"
                     onClick={() => runRepay(true)}
-                    disabled={!positions.isCorrectNetwork || !repayAllowanceReady}
+                    disabled={!positions.isCorrectNetwork || !repayAllowanceReady || !canRepayEverything}
                     busy={repaySequence.isRunning}
                   >
                     Repay everything
                   </ActionButton>
+                  {!canRepayEverything ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Your account holds less than you owe. Add New Zealand dollars before clearing the loan in full.
+                    </p>
+                  ) : null}
                 </>
               ),
             }}

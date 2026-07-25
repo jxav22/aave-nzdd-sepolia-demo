@@ -420,10 +420,9 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
         requireWalletAndNetwork();
         const parsed = parseTokenAmount(amount, decimals);
 
-        if (!hasSufficientBalance(parsed, (walletBalance as bigint | undefined) ?? ZERO)) {
-          throw new Error(`Insufficient wallet ${symbol} balance for this approval amount.`);
-        }
-
+        // Approving above wallet balance is valid ERC-20 and is required for
+        // buffered repay approvals (Aave's repay(max) pulls post-accrual debt).
+        // Balance checks belong on supply / repay, not approve.
         const txHash = await writeUnderlying({
           functionName: "approve",
           args: [aaveHackathonMnzdConfig.poolAddress, parsed],
@@ -444,7 +443,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
         setIsApproving(false);
       }
     },
-    [decimals, refetchAllowance, requireWalletAndNetwork, symbol, walletBalance, writeUnderlying],
+    [decimals, refetchAllowance, requireWalletAndNetwork, symbol, writeUnderlying],
   );
 
   const supply = useCallback(
