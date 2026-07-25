@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { type WalletWithMetadata, useExportWallet, usePrivy } from "@privy-io/react-auth";
+import { createPortal } from "react-dom";
 import { getAddress, isAddress, isAddressEqual } from "viem";
 import { useAccount } from "wagmi";
 import {
