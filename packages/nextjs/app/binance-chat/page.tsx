@@ -1,291 +1,168 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { NextPage } from "next";
-import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { ActionButton, Card, Eyebrow, Note, SectionHeading } from "~~/components/ora/primitives";
+import { plainText, useApiAgentChat } from "~~/hooks/useApiAgentChat";
 
-type ChatRole = "user" | "assistant";
-
-type ApiCall = {
-  name: string;
-  method: string;
-  path: string;
-  status: number;
-  ok: boolean;
-  resultSummary: string;
-};
-
-type UiMessage = {
-  id: string;
-  role: ChatRole;
-  content: string;
-  toolCalls?: ApiCall[];
-};
-
-type StatusResponse = {
-  ok: boolean;
-  data?: {
-    configured: boolean;
-    model: string;
-    tools: { name: string; method: string; path: string }[];
-    suggestions: string[];
-    envHint: string;
-  };
-};
-
-type ChatResponse = {
-  ok: boolean;
-  data?: {
-    reply: string;
-    model: string;
-    toolCalls: ApiCall[];
-    suggestions: string[];
-  };
-  error?: { message?: string; code?: string };
-};
-
-function newId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-/** Bubbles render plain text, and the model reaches for markdown anyway. Strip the markers. */
-function plainText(content: string): string {
-  return content
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
-    .replace(/\*\*(.+?)\*\*/g, "$1")
-    .replace(/__(.+?)__/g, "$1")
-    .replace(/^#{1,6}\s+/gm, "")
-    .trim();
-}
-
-const BinanceChatPage: NextPage = () => {
-  const [messages, setMessages] = useState<UiMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "Ask me anything this app's public API can answer — token markets, a wallet's Aave position, or how a proposed dNZD borrow holds up if ETH falls. Every answer comes from a real call to /api/v1.",
-    },
-  ]);
+/**
+ * Full view of the API agent.
+ *
+ * Shares `useApiAgentChat` with the floating widget, so both surfaces behave identically and
+ * there is one place where the conversation logic lives. This view adds the room the widget
+ * does not have: the full tool trace under each reply, and what the agent is allowed to call.
+ */
+const AgentPage: NextPage = () => {
+  const { messages, send, reset, isSending, error, configured, model, toolCount, suggestions, envHint, isFresh } =
+    useApiAgentChat();
   const [input, setInput] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [configured, setConfigured] = useState<boolean | null>(null);
-  const [model, setModel] = useState("gpt-4o-mini");
-  const [toolCount, setToolCount] = useState(0);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [envHint, setEnvHint] = useState("Set OPENAI_API_KEY in packages/nextjs/.env.local");
   const bottomRef = useRef<HTMLDivElement>(null);
-  const sendingLock = useRef(false);
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const response = await fetch("/api/v1/binance/chat");
-        const body = (await response.json()) as StatusResponse;
-        if (response.ok && body.ok && body.data) {
-          setConfigured(body.data.configured);
-          setModel(body.data.model);
-          setToolCount(body.data.tools.length);
-          setSuggestions(body.data.suggestions);
-          setEnvHint(body.data.envHint);
-        } else {
-          setConfigured(false);
-        }
-      } catch {
-        setConfigured(false);
-      }
-    })();
-  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isSending]);
 
-  const send = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim();
-      if (!trimmed || sendingLock.current) {
-        return;
-      }
-
-      sendingLock.current = true;
-      setError(null);
-      const userMessage: UiMessage = { id: newId(), role: "user", content: trimmed };
-      const historyForApi = [...messages, userMessage]
-        .filter(m => m.id !== "welcome")
-        .map(({ role, content }) => ({ role, content }));
-
-      setMessages(prev => [...prev, userMessage]);
-      setInput("");
-      setSuggestions([]);
-      setIsSending(true);
-
-      try {
-        const response = await fetch("/api/v1/binance/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: historyForApi }),
-        });
-        const body = (await response.json()) as ChatResponse;
-        const data = body.data;
-        if (!response.ok || !body.ok || !data) {
-          if (body.error?.code === "MISSING_CONFIG") {
-            setConfigured(false);
-          }
-          throw new Error(body.error?.message ?? `Chat failed (${response.status})`);
-        }
-
-        setMessages(prev => [
-          ...prev,
-          {
-            id: newId(),
-            role: "assistant",
-            content: data.reply,
-            toolCalls: data.toolCalls,
-          },
-        ]);
-        setSuggestions(data.suggestions ?? []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Chat failed.");
-      } finally {
-        sendingLock.current = false;
-        setIsSending(false);
-      }
-    },
-    [messages],
-  );
-
-  const onSubmit = (event: FormEvent) => {
+  const submit = (event: FormEvent) => {
     event.preventDefault();
-    void send(input);
+    const text = input;
+    setInput("");
+    void send(text);
   };
 
+  const disabled = isSending || configured === false;
+
   return (
-    <div className="flex flex-col items-center grow pt-8 pb-16 px-4">
-      <div className="w-full max-w-3xl flex flex-col gap-4 min-h-[70vh]">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <ChatBubbleLeftRightIcon className="h-8 w-8" />
-            API Agent Chat
-          </h1>
-          <p className="mt-2 text-sm opacity-80">A chatbot whose entire toolset is this app&apos;s public API</p>
-          <p className="text-sm opacity-70 mt-1">
-            Tools are generated from <code>/api/v1/openapi.json</code>, and each one is an HTTP call to the same
-            endpoints you can curl — Binance market data, Aave positions, borrow-risk stress tests. Dialogue uses OpenAI
-            tool-calling; the API itself needs no key.
-          </p>
-        </div>
+    <div className="container-page py-12 lg:py-16">
+      <SectionHeading eyebrow="Assistant" title={<>Ask about the market</>}>
+        Every answer is produced by real calls to this app&apos;s public API rather than from the model&apos;s own
+        knowledge. The tools are generated from the API specification, so the assistant can only do what the published
+        API does.
+      </SectionHeading>
 
-        {configured === false && (
-          <div className="alert alert-warning text-sm">
-            <span>
-              <strong>OPENAI_API_KEY required.</strong> {envHint} Then restart <code>yarn start</code>.
-            </span>
-          </div>
-        )}
+      {configured === false ? (
+        <Note tone="warning" className="mt-8" title="The assistant needs a language model key">
+          {envHint} Then restart the app. The API itself needs no key, so the rest of the site is unaffected.
+        </Note>
+      ) : null}
 
-        {configured && (
-          <p className="text-xs opacity-60">
-            Model <code>{model}</code> · {toolCount} API operations as tools · no API key, no wallet signature
-          </p>
-        )}
+      {configured ? (
+        <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          {model} · {toolCount} API operations available · no wallet signature
+        </p>
+      ) : null}
 
-        <div className="bg-base-200 rounded-lg flex flex-col grow border border-base-300 min-h-[28rem]">
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+      <Card className="mt-6 flex min-h-[32rem] flex-col p-0">
+        <div className="flex-1 overflow-y-auto p-6">
+          <ul className="flex flex-col gap-4">
             {messages.map(message => (
-              <div key={message.id} className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
+              <li key={message.id} className={`flex flex-col ${message.role === "user" ? "items-end" : "items-start"}`}>
                 <div
-                  className={`chat-bubble text-sm whitespace-pre-wrap ${
-                    message.role === "user" ? "chat-bubble-primary" : "chat-bubble-secondary"
+                  className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                    message.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
                   }`}
                 >
                   {message.role === "assistant" ? plainText(message.content) : message.content}
                 </div>
-                {message.toolCalls && message.toolCalls.length > 0 && (
-                  <div className="chat-footer opacity-60 text-xs mt-1 flex flex-col gap-0.5 max-w-prose">
+
+                {message.toolCalls && message.toolCalls.length > 0 ? (
+                  <ul className="mt-2 flex max-w-[80%] flex-col gap-1">
                     {message.toolCalls.map((call, index) => (
-                      <span key={`${message.id}-${index}`}>
-                        <code>
-                          {call.method} {call.path}
-                        </code>{" "}
-                        <span className={call.ok ? "" : "text-error"}>
-                          → {call.status || "failed"}
+                      <li key={`${message.id}-${index}`} className="font-mono text-[11px] text-muted-foreground">
+                        {call.method} {call.path}{" "}
+                        <span className={call.ok ? "" : "text-destructive"}>
+                          {call.status || "failed"}
                           {call.ok ? "" : ` ${call.resultSummary}`}
                         </span>
-                      </span>
+                      </li>
                     ))}
-                  </div>
-                )}
-              </div>
+                  </ul>
+                ) : null}
+              </li>
             ))}
-            {isSending && (
-              <div className="chat chat-start">
-                <div className="chat-bubble chat-bubble-secondary text-sm">Calling the API…</div>
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
 
-          {suggestions.length > 0 && (
-            <div className="px-4 pb-2 flex flex-wrap gap-2">
+            {isSending ? (
+              <li className="flex items-start">
+                <div className="flex items-center gap-2 rounded-2xl bg-secondary px-4 py-3 text-sm text-muted-foreground">
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Checking live data
+                </div>
+              </li>
+            ) : null}
+          </ul>
+          <div ref={bottomRef} />
+        </div>
+
+        {error ? (
+          <p className="border-t border-border px-6 py-3 text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        {suggestions.length > 0 && configured !== false ? (
+          <div className="border-t border-border px-6 py-4">
+            <Eyebrow>{isFresh ? "Try asking" : "Follow up"}</Eyebrow>
+            <div className="mt-2 flex flex-wrap gap-2">
               {suggestions.map(suggestion => (
                 <button
                   key={suggestion}
                   type="button"
-                  className="btn btn-xs btn-ghost border border-base-300"
-                  disabled={isSending || configured === false}
+                  disabled={disabled}
                   onClick={() => void send(suggestion)}
+                  className="rounded-full border border-input px-3.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
                 >
                   {suggestion}
                 </button>
               ))}
             </div>
-          )}
+          </div>
+        ) : null}
 
-          <form onSubmit={onSubmit} className="p-4 pt-2 border-t border-base-300 flex gap-2">
-            <input
-              className="input input-bordered grow"
-              value={input}
-              onChange={event => setInput(event.target.value)}
-              placeholder={
-                configured === false ? "Set OPENAI_API_KEY to chat…" : "Ask about a token, wallet or borrow…"
-              }
-              disabled={isSending || configured === false}
-              maxLength={2000}
-            />
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isSending || configured === false || !input.trim()}
-            >
-              {isSending ? (
-                <span className="loading loading-spinner loading-sm" />
-              ) : (
-                <PaperAirplaneIcon className="h-4 w-4" />
-              )}
-              Send
-            </button>
-          </form>
-        </div>
+        <form onSubmit={submit} className="flex items-center gap-3 border-t border-border p-4">
+          <input
+            value={input}
+            onChange={event => setInput(event.target.value)}
+            disabled={disabled}
+            maxLength={2000}
+            aria-label="Your question"
+            placeholder={configured === false ? "Not available yet" : "Ask about a price, a position or a loan"}
+            className="min-w-0 flex-1 rounded-full border border-input bg-background px-4 py-2.5 text-sm outline-none placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-ring/40 disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={disabled || !input.trim()}
+            aria-label="Send"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-[var(--pine-deep)] disabled:opacity-40"
+          >
+            <PaperAirplaneIcon className="h-4 w-4" />
+          </button>
+          {!isFresh ? (
+            <ActionButton tone="ghost" onClick={reset} disabled={isSending}>
+              Clear
+            </ActionButton>
+          ) : null}
+        </form>
+      </Card>
 
-        {error && <p className="text-error text-sm">{error}</p>}
-
-        <p className="text-xs opacity-60">
-          Same surface as the{" "}
-          <Link className="link" href="/developer-api">
-            Developer API
-          </Link>{" "}
-          playground. Market data comes from{" "}
-          <a className="link" href="https://github.com/binance/binance-skills-hub" target="_blank" rel="noreferrer">
-            Binance agent skills
-          </a>
-          .
-        </p>
-      </div>
+      <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
+        The same operations are documented and callable yourself on the{" "}
+        <Link href="/developer-api" className="underline underline-offset-4 hover:text-foreground">
+          developer API
+        </Link>{" "}
+        page. Market data comes from{" "}
+        <a
+          href="https://github.com/binance/binance-skills-hub"
+          target="_blank"
+          rel="noreferrer"
+          className="underline underline-offset-4 hover:text-foreground"
+        >
+          Binance agent skills
+        </a>
+        , and nothing the assistant does can move funds.
+      </p>
     </div>
   );
 };
 
-export default BinanceChatPage;
+export default AgentPage;
