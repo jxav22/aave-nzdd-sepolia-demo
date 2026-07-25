@@ -11,6 +11,7 @@ const PRODUCT_LINKS = [
 /** Everything de-emphasised from the header ends up here. */
 const TECHNICAL_LINKS = [
   { label: "API for developers", href: "/developer-api" },
+  { label: "Ask the API agent", href: "/binance-chat" },
   { label: "Advanced panel", href: "/advanced" },
 ];
 
