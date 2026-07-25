@@ -1,105 +1,110 @@
-# 🏗 Scaffold-ETH 2
+# Aave NZD Sepolia Demo
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+Scaffold-ETH 2 monorepo that demos a **private Aave V3 market on Ethereum Sepolia** with **wETH**, **wBTC**, and **dNZD** (demo NZD stable, 6 decimals) — plus a Binance-powered borrow risk API.
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+> **New here?** Start with [docs/HANDOVER.md](docs/HANDOVER.md) — verified live state, day-one blockers, and the path from prototype to product.
 
-> [!NOTE]
-> 🤖 Scaffold-ETH 2 is AI-ready! It has everything agents need to build on Ethereum. Check `.agents/`, `.claude/`, `.opencode` or `.cursor/` for more info.
+Built on [Scaffold-ETH 2](https://scaffoldeth.io) (Next.js, RainbowKit, Hardhat, Wagmi, Viem, TypeScript).
 
-⚙️ Built using NextJS, RainbowKit, Hardhat, Wagmi, Viem, and Typescript.
+## What ships
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🪝 **[Custom hooks](https://docs.scaffoldeth.io/hooks/)**: Collection of React hooks wrapper around [wagmi](https://wagmi.sh/) to simplify interactions with smart contracts with typescript autocompletion.
-- 🧱 [**Components**](https://docs.scaffoldeth.io/components/): Collection of common web3 components to quickly build your frontend.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
+| Surface | Route / entry | Notes |
+| :--- | :--- | :--- |
+| **Hackathon market UI** | [`/mnzd`](packages/nextjs/app/mnzd/page.tsx) | Primary: wrap/mint → approve → supply → borrow/repay dNZD |
+| **Borrow Risk Assistant** | Panel on `/mnzd` (dNZD tab) | Stress-tests a proposed borrow; never submits a tx |
+| **Public REST API** | `/api/v1/*` | OpenAPI at `/api/v1/openapi.json` — see [docs/API.md](docs/API.md) |
+| **Developer playground** | `/developer-api` | Interactive forms over the v1 API |
+| **API Agent** | `/binance-chat` | LLM over the same routes (`OPENAI_API_KEY`) |
+| Official Aave EURS | `/aave` | Reference only — **hidden from nav** |
 
-![Debug Contracts tab](https://github.com/scaffold-eth/scaffold-eth-2/assets/55535804/b237af0c-5027-4849-a5c1-2e31495cccb1)
+The custom market is deployed from the sibling repo `aave-v3-origin`, not from this monorepo. Addresses live in [`packages/nextjs/config/hackathon-market.json`](packages/nextjs/config/hackathon-market.json). `packages/hardhat` is stock Scaffold-ETH boilerplate — you do **not** need `yarn chain` / `yarn deploy` for product work.
 
-## Requirements
+**dNZD** is a mock stand-in. It is not production NewMoney / NZDD.
 
-Before you begin, you need to install the following tools:
+## Quickstart (Sepolia demo)
 
-- [Node (>= v20.18.3)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
+### Requirements
+
+- [Node.js >= 22.10.0](https://nodejs.org/en/download/)
+- [Yarn 4](https://yarnpkg.com/getting-started/install) (this repo uses `packageManager: yarn@4.13.0`)
 - [Git](https://git-scm.com/downloads)
+- A browser wallet on **Ethereum Sepolia** (`11155111`)
 
-## Quickstart
+### Run
 
-To get started with Scaffold-ETH 2, follow the steps below:
-
-1. Install dependencies if it was skipped in CLI:
-
-```
-cd my-dapp-example
+```bash
 yarn install
-```
 
-2. Run a local network in the first terminal:
+# Optional but recommended — packages/nextjs/.env.local
+#   ALCHEMY_API_KEY=...
+#   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=...
+#   OPENAI_API_KEY=...          # only for /binance-chat
+#   OPENAI_MODEL=gpt-4o-mini    # optional
 
-```
-yarn chain
-```
-
-This command starts a local Ethereum network using Hardhat. The network runs on your local machine and can be used for testing and development. You can customize the network configuration in `packages/hardhat/hardhat.config.ts`.
-
-3. On a second terminal, deploy the test contract:
-
-```
-yarn deploy
-```
-
-This command deploys a test smart contract to the local network. The contract is located in `packages/hardhat/contracts` and can be modified to suit your needs. The `yarn deploy` command uses the deploy script located in `packages/hardhat/deploy` to deploy the contract to the network. You can also customize the deploy script.
-
-4. On a third terminal, start your NextJS app:
-
-```
 yarn start
 ```
 
-Visit your app on: `http://localhost:3000`. You can interact with your smart contract using the `Debug Contracts` page. You can tweak the app config in `packages/nextjs/scaffold.config.ts`.
+Open **http://localhost:3000/mnzd**.
 
-Run smart contract test with `yarn hardhat:test`
+Defaults for Alchemy and WalletConnect exist in `scaffold.config.ts` for prototyping; use your own keys for anything shared or public.
 
-- Edit your smart contracts in `packages/hardhat/contracts`
-- Edit your frontend homepage at `packages/nextjs/app/page.tsx`. For guidance on [routing](https://nextjs.org/docs/app/building-your-application/routing/defining-routes) and configuring [pages/layouts](https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts) checkout the Next.js documentation.
-- Edit your deployment scripts in `packages/hardhat/deploy`
+### Useful checks
 
-## Aave V3 hackathon market (primary)
+```bash
+yarn test:aave                          # Vitest (config, amounts, API, risk)
+yarn next:check-types
+yarn next:lint
+cd packages/nextjs && yarn risk:smoke   # live position + Binance + stress engine
+yarn aave:smoke                         # read-only official EURS market
+```
 
-This repo’s primary demo is a **custom Aave V3 market on Ethereum Sepolia** with **wETH**, **wBTC**, and **dNZD** (mock NZD stable).
+Opt-in write e2e (needs a funded key that can mint dNZD):
 
-- **Demo UI:** `/mnzd` (nav: Hackathon Market) after `yarn start`
-- **New to the project?** Start with [docs/HANDOVER.md](docs/HANDOVER.md) — verified live state, blockers, and the path from prototype to product
-- **Docs:** [docs/AAVE_HACKATHON_MNZD.md](docs/AAVE_HACKATHON_MNZD.md)
-- **Build status:** [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md) — note: stale on addresses, see HANDOVER §3
+```bash
+AAVE_E2E=1 E2E_PRIVATE_KEY=0x… yarn aave:e2e
+```
 
-Get wETH by wrapping Sepolia ETH (or Supply ETH via WrappedTokenGateway). Mint wBTC/dNZD with the token-owner faucet on the page.
+## Day-one reality check
 
-The official Aave Sepolia EURS reference at `/aave` is kept in code but **hidden from nav**. See [docs/AAVE_SEPOLIA.md](docs/AAVE_SEPOLIA.md). Required RPC env var: `ALCHEMY_API_KEY` in `packages/nextjs/.env.local`.
+As of the last live reconciliation ([HANDOVER §2](docs/HANDOVER.md#2-verified-live-state)):
 
-## Binance-powered Borrow Risk Assistant
-
-Before you borrow dNZD, the `/mnzd` page stress-tests the amount against recent public ETH market data from Binance Skills: projected health factors under several price declines, the decline at which you would be liquidated, and a more conservative amount that survives a scenario you pick.
-
-No Binance account or API key is needed, and the assistant never submits a transaction.
-
-- **Docs:** [docs/BORROW_RISK_ASSISTANT.md](docs/BORROW_RISK_ASSISTANT.md) — methodology, data sources, seeding runbook, demo script
-- **Public API:** [docs/API.md](docs/API.md) — `GET /api/v1/borrow-risk`, plus `simulate`, `position`, `market/eth` and an OpenAPI spec
-- **Live check:** `cd packages/nextjs && yarn risk:smoke`
+- **wETH / wBTC** use live Chainlink Sepolia feeds; **dNZD** is a constant $1 mock (USD-referenced — see HANDOVER §4.2).
+- Crypto collateral has been supplied by the admin; **dNZD pool liquidity was 0**, so borrows revert until someone supplies dNZD.
+- Minting dNZD / wBTC is **owner-only**.
 
 ## Documentation
 
-Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
+| Doc | Use it for |
+| :--- | :--- |
+| [docs/HANDOVER.md](docs/HANDOVER.md) | **Canonical** live market state, blockers, repo map, product gaps |
+| [docs/AAVE_HACKATHON_MNZD.md](docs/AAVE_HACKATHON_MNZD.md) | `/mnzd` runbook, assets, e2e |
+| [docs/BORROW_RISK_ASSISTANT.md](docs/BORROW_RISK_ASSISTANT.md) | Risk methodology, seeding, demo script |
+| [docs/API.md](docs/API.md) | Public API v1 |
+| [docs/AAVE_SEPOLIA.md](docs/AAVE_SEPOLIA.md) | Official EURS reference path (`/aave`) |
+| [docs/WEB2_HANDOFF.md](docs/WEB2_HANDOFF.md) | Web2 → web3 onboarding for `/mnzd` |
+| [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md) | Product framing / pitch honesty — **addresses superseded by HANDOVER** |
+| [Scaffold-ETH 2 docs](https://docs.scaffoldeth.io) | SE-2 hooks, components, local Hardhat workflow |
 
-To know more about its features, check out our [website](https://scaffoldeth.io).
+## Local Hardhat playground (optional)
 
-## Contributing to Scaffold-ETH 2
+Unrelated to the Sepolia Aave demo:
 
-We welcome contributions to Scaffold-ETH 2!
+```bash
+yarn chain      # local chain
+yarn deploy     # stock YourContract only
+yarn start
+```
 
-Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+See [Scaffold-ETH 2](https://docs.scaffoldeth.io) for the full starter-kit workflow.
+
+## Deploy frontend
+
+```bash
+yarn vercel:yolo --prod
+```
+
+Do not expose `OPENAI_API_KEY` on a public deploy without gating `POST /api/v1/binance/chat` — CORS is open on the v1 API.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). For agent / AI guidance, see [AGENTS.md](AGENTS.md).

@@ -1,4 +1,10 @@
-# Aave V3 Sepolia Integration
+# Aave V3 Sepolia Integration (official EURS — secondary)
+
+> **Primary product path** is the custom hackathon market at `/mnzd` (dNZD / wETH / wBTC).
+> See [AAVE_HACKATHON_MNZD.md](./AAVE_HACKATHON_MNZD.md) and [HANDOVER.md](./HANDOVER.md).
+>
+> This document covers the **official** Aave V3 Sepolia **EURS** reference at `/aave`,
+> which is kept in code but **hidden from nav**.
 
 ## 1. What this integration does
 
@@ -62,7 +68,7 @@ yarn next:build
 yarn aave:smoke
 ```
 
-You do **not** need `yarn chain` / `yarn deploy` for the Aave Sepolia flow (no custom market is deployed).
+You do **not** need `yarn chain` / `yarn deploy` for this flow (no custom market is deployed from this repo).
 
 ## 6. Switch MetaMask to Sepolia
 

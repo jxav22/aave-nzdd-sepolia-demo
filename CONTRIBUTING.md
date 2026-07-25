@@ -1,3 +1,12 @@
+# Contributing Guide
+
+This repository is a Scaffold-ETH 2 fork used for the **Aave NZD Sepolia demo** (`/mnzd`, risk API).
+Product docs: [README.md](README.md) · [docs/HANDOVER.md](docs/HANDOVER.md).
+
+The sections below retain the upstream Scaffold-ETH 2 contribution workflow.
+
+---
+
 # Welcome to Scaffold-ETH 2 Contributing Guide
 
 Thank you for investing your time in contributing to Scaffold-ETH 2!
@@ -8,7 +17,7 @@ This guide aims to provide an overview of the contribution workflow to help us m
 
 Scaffold-ETH 2 is a minimal and forkable repo providing builders with a starter kit to build decentralized applications on Ethereum.
 
-Read the [README](README.md) to get an overview of the project.
+Read the [README](README.md) to get an overview of this project’s demo surface and SE-2 basics.
 
 ### Vision
 

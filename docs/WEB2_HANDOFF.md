@@ -1,29 +1,38 @@
 # Web2 Engineer Handoff
 
-This guide is for engineers comfortable with React / Next.js who are new to crypto. It gets you from clone → running the Aave Sepolia demo → knowing which files to edit.
+For engineers comfortable with React / Next.js who are new to crypto. Gets you from clone → running the **hackathon dNZD market** → knowing which files to edit.
 
-For hook API details, addresses, and testnet limitations, see [AAVE_SEPOLIA.md](./AAVE_SEPOLIA.md).
+| Doc | When |
+|-----|------|
+| [HANDOVER.md](./HANDOVER.md) | Live market state, blockers, product gaps — **read first** |
+| [AAVE_HACKATHON_MNZD.md](./AAVE_HACKATHON_MNZD.md) | `/mnzd` runbook, assets, e2e |
+| [AAVE_SEPOLIA.md](./AAVE_SEPOLIA.md) | Official EURS reference at `/aave` (secondary, hidden from nav) |
+| [API.md](./API.md) / [BORROW_RISK_ASSISTANT.md](./BORROW_RISK_ASSISTANT.md) | Public risk API |
 
 ---
 
 ## 1. What you’re building
 
-This repo is a **Scaffold-ETH 2** frontend that talks to the **official Aave V3 market on Ethereum Sepolia** (a public test network).
+This repo is a **Scaffold-ETH 2** frontend (+ small Next.js API) for a **private Aave V3 market on Ethereum Sepolia** with three reserves: **wETH**, **wBTC**, and **dNZD** (demo NZD stable).
+
+Primary page: **`/mnzd`** (nav: Hackathon Market).
 
 A connected wallet can:
 
-1. Mint test **EURS** from the Aave faucet
-2. **Approve** the Aave Pool to spend that EURS
-3. **Supply** EURS into Aave and see an **aToken** balance
-4. **Withdraw** back to the wallet
+1. Wrap Sepolia ETH into this market’s wETH (or Supply ETH in one tx)
+2. Mint wBTC / dNZD **if** you hold the token-owner key (owner faucet on the page)
+3. **Approve** → **Supply** collateral or liquidity
+4. **Borrow** dNZD against crypto collateral (once the dNZD reserve has liquidity)
+5. Use the **Borrow Risk Assistant** before borrowing (read-only; no tx)
+6. **Repay** / **Withdraw**
 
-This is a **frontend-only** integration. You do **not** deploy Aave, deploy a custom stablecoin, or run a local blockchain for this path.
+This is a **frontend + API** integration. Custom Aave contracts are **not** deployed from this repo (they live in sibling `aave-v3-origin`). Skip `yarn chain` / `yarn deploy` for product work.
 
 | This is | This is not |
 |---------|-------------|
-| Sepolia **test** EURS | Real money or mainnet |
-| A prototype settlement asset | **NZDD** (do not label it as such) |
-| Live public Aave V3 on Sepolia | Your own lending market |
+| Sepolia **test** assets | Real money or mainnet |
+| **dNZD** demo stand-in | Production NewMoney / **NZDD** |
+| Private Aave V3 market + official EURS reference | An official Aave-listed NZD market |
 
 ---
 
@@ -31,87 +40,82 @@ This is a **frontend-only** integration. You do **not** deploy Aave, deploy a cu
 
 | Web3 term | Rough web2 analogy |
 |-----------|-------------------|
-| **Wallet** (e.g. MetaMask) | Signed-in identity + private keystore. The user confirms every write. |
-| **Network / chain ID** | Environment. Sepolia (`11155111`) ≈ staging. Mainnet ≈ production — we do not use it here. |
-| **RPC** (Alchemy) | Backend API your app calls to read chain state and submit transactions. |
-| **Transaction** | A user-confirmed “POST” that costs **gas** (paid in Sepolia ETH) and can fail on-chain. |
-| **Approve** then **supply** | Like granting spend permission, then executing the action — **two separate confirmed steps**. They are never auto-chained. |
-| **Allowance** | How much the Pool is currently allowed to pull from the user’s EURS balance. |
-| **aToken balance** | Receipt for what you supplied; it can grow slightly with interest. |
-| **EURS decimals = 2** | Amounts behave like currency with cents (`1.50` → `150` base units). Not 6-decimal USDC. |
+| **Wallet** (e.g. MetaMask) | Signed-in identity + private keystore. User confirms every write. |
+| **Network / chain ID** | Environment. Sepolia (`11155111`) ≈ staging. |
+| **RPC** (Alchemy) | Backend API to read chain state and submit transactions. |
+| **Transaction** | User-confirmed “POST” that costs **gas** (Sepolia ETH) and can fail on-chain. |
+| **Approve** then **supply** | Grant spend permission, then execute — **two separate confirms** (unless Supply ETH gateway). |
+| **Allowance** | How much the Pool may pull from the user’s token balance. |
+| **aToken balance** | Receipt for supplied amount; can grow with interest. |
+| **Health factor** | Over-collateralisation score. Below 1.0 → liquidation risk. No debt → ∞. |
+| **dNZD decimals = 6** | Like USDC-style units, not 18-decimal ETH. **wBTC = 8**. |
 
-You are not calling a REST API you own for lend/borrow. The “backend” is public smart contracts on Sepolia; your Next.js app is the client UI.
+You are not calling a REST API you own for lend/borrow. The “backend” for market actions is public smart contracts on Sepolia; Next.js also exposes a **read-only** risk/market API under `/api/v1`.
 
 ---
 
-## 3. Day-1: run the demo (no local blockchain)
-
-**Skip** `yarn chain` and `yarn deploy` for the Aave path. Those are for Scaffold-ETH’s optional local Hardhat network and are unrelated to live Sepolia Aave.
+## 3. Day-1: run the demo
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/download/) ≥ v20.18.3
-- [Yarn](https://yarnpkg.com/getting-started/install)
+- [Node.js](https://nodejs.org/en/download/) **≥ 22.10.0**
+- [Yarn 4](https://yarnpkg.com/getting-started/install)
 - [Git](https://git-scm.com/downloads)
-- A browser wallet such as [MetaMask](https://metamask.io/download/)
+- Browser wallet on **Ethereum Sepolia**
 
-### Environment variables
+### Environment
 
-1. Copy `packages/nextjs/.env.example` → `packages/nextjs/.env.local`
-2. Fill in:
+Copy `packages/nextjs/.env.example` → `packages/nextjs/.env.local`:
 
 ```env
 ALCHEMY_API_KEY=
 NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=
+# OPENAI_API_KEY=          # only for /binance-chat
+# OPENAI_MODEL=gpt-4o-mini
 ```
 
-| Variable | Where to get it |
-|----------|-----------------|
-| `ALCHEMY_API_KEY` | [Alchemy](https://www.alchemy.com/) → create an app → Ethereum Sepolia |
-| `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` | [WalletConnect Cloud](https://cloud.walletconnect.com/) → create a project → copy Project ID |
+| Variable | Where |
+|----------|--------|
+| `ALCHEMY_API_KEY` | [Alchemy](https://www.alchemy.com/) → Ethereum Sepolia app |
+| `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` | [WalletConnect Cloud](https://cloud.walletconnect.com/) |
 
-`ALCHEMY_API_KEY` is exposed to the client via `next.config.ts` (intentional for this template). Do not also set a redundant `NEXT_PUBLIC_ALCHEMY_API_KEY`.
+`ALCHEMY_API_KEY` is exposed client-side via `next.config.ts` (template convention). Defaults exist in `scaffold.config.ts` for quick prototyping.
 
 ### Install and start
-
-From the repo root:
 
 ```bash
 yarn install
 yarn start
 ```
 
-Open [http://localhost:3000/aave](http://localhost:3000/aave).
+Open **http://localhost:3000/mnzd** (not `/aave` — that is the secondary EURS reference).
 
 ### Connect on Sepolia
 
-1. Connect your wallet in the app
-2. Ensure the network is **Ethereum Sepolia** (chain ID `11155111`)
-3. Or use the **Switch to Sepolia** button on `/aave` if you are on another chain
+1. Connect wallet → network **Ethereum Sepolia** (`11155111`)
+2. Or use **Switch to Sepolia** on the page
 
 ### Get Sepolia ETH (gas)
 
-Every approve / supply / withdraw costs a small amount of Sepolia ETH. Use a public Sepolia faucet (Alchemy, Infura, Google Cloud, etc.) and send test ETH to your wallet on chain `11155111`.
+Use a public Sepolia faucet. Needed for every write.
 
-### Get test EURS
+### Get assets
 
-Use the **official Aave Ethereum Sepolia faucet** (not Circle USDC, not Base):
+| Asset | How |
+|-------|-----|
+| **wETH** | Wrap on the wETH tab, or **Supply ETH** (gateway) |
+| **wBTC** / **dNZD** | Owner faucet on the page — only the token owner can mint |
 
-1. Open [Aave Sepolia faucet (`proto_sepolia_v3`)](https://bridge-testnet.aave.com/faucet/?marketName=proto_sepolia_v3)
-2. Connect the same wallet on Ethereum Sepolia
-3. Mint **EURS** — prefer a small amount (EURS has **2 decimals**; large mints often hit faucet limits)
+If you are not the owner, someone with the admin key must mint dNZD/wBTC to you. See [HANDOVER §4.3](./HANDOVER.md#43-there-is-no-way-for-a-user-to-obtain-dnzd).
 
-**Do not** use Circle’s Sepolia USDC or Base USDC. Different contracts/chains — they will not work with this Pool. Public Sepolia USDC on Aave is also **supply-capped** (error `51`), which is why this demo uses EURS.
+### Walk the happy path (once liquidity exists)
 
-### Walk the UI
+1. **wETH tab** — Supply ETH as collateral  
+2. **dNZD tab** — (admin) mint + supply liquidity so others can borrow  
+3. Enter a borrow amount; read the **Borrow Risk Assistant** panel  
+4. Borrow → repay → withdraw  
 
-On `/aave`:
-
-1. Confirm wallet EURS balance appears
-2. Enter an amount → **Approve** → confirm in the wallet
-3. **Supply** the same amount → confirm again
-4. Confirm **aToken / supplied** balance updates
-5. **Withdraw** (partial or all) → confirm
+If borrow reverts with liquidity errors, the dNZD reserve is empty — seed it first (`yarn risk:smoke` prints `dNZD pool liquidity`).
 
 ---
 
@@ -119,36 +123,35 @@ On `/aave`:
 
 | If you want to change… | Edit |
 |------------------------|------|
-| Page copy, layout, empty states, faucet links | [`packages/nextjs/app/aave/page.tsx`](../packages/nextjs/app/aave/page.tsx) |
-| Approve / supply / withdraw logic, balances, errors | [`packages/nextjs/hooks/aave/useAaveSepolia.ts`](../packages/nextjs/hooks/aave/useAaveSepolia.ts) |
-| Pool / EURS / aToken addresses, symbols, decimals | [`packages/nextjs/config/aaveSepolia.ts`](../packages/nextjs/config/aaveSepolia.ts) |
-| Names registered for Scaffold-ETH contract hooks | [`packages/nextjs/contracts/externalContracts.ts`](../packages/nextjs/contracts/externalContracts.ts) |
-| Human amount ↔ on-chain units parsing | [`packages/nextjs/utils/aave/amount.ts`](../packages/nextjs/utils/aave/amount.ts) |
-| Target chain for the app | [`packages/nextjs/scaffold.config.ts`](../packages/nextjs/scaffold.config.ts) |
+| Hackathon page | [`packages/nextjs/app/mnzd/page.tsx`](../packages/nextjs/app/mnzd/page.tsx) |
+| Supply/borrow UI panel | [`packages/nextjs/components/aave/AaveMarketPanel.tsx`](../packages/nextjs/components/aave/AaveMarketPanel.tsx) |
+| Risk UI | [`packages/nextjs/components/aave/BorrowRiskAssistant.tsx`](../packages/nextjs/components/aave/BorrowRiskAssistant.tsx) |
+| Contract writes / reads | [`packages/nextjs/hooks/aave/useAaveHackathonMnzd.ts`](../packages/nextjs/hooks/aave/useAaveHackathonMnzd.ts) |
+| Market addresses | [`packages/nextjs/config/hackathon-market.json`](../packages/nextjs/config/hackathon-market.json) |
+| Scaffold contract names | [`packages/nextjs/contracts/externalContracts.ts`](../packages/nextjs/contracts/externalContracts.ts) |
+| Amounts / Aave errors | [`packages/nextjs/utils/aave/`](../packages/nextjs/utils/aave/) |
+| Public API routes | [`packages/nextjs/app/api/v1/`](../packages/nextjs/app/api/v1/) |
+| Target chain | [`packages/nextjs/scaffold.config.ts`](../packages/nextjs/scaffold.config.ts) |
 
-Addresses come from `@aave-dao/aave-address-book` (`AaveV3Sepolia`), not from hardcoded blog snippets.
+Official EURS path (secondary): `app/aave/page.tsx` + `useAaveSepolia.ts` + `aaveSepolia.ts`.
 
 ---
 
 ## 5. How to extend safely
 
-- Prefer the existing **`useAaveSepolia`** hook from UI code instead of re-implementing Pool calls.
-- Keep **approve** and **supply** as separate user-confirmed transactions.
-- Do **not** hardcode token or Pool addresses in components — go through `aaveSepoliaConfig`.
-- For new contract reads/writes, use Scaffold-ETH hooks from `~~/hooks/scaffold-eth`:
-  - `useScaffoldReadContract`
-  - `useScaffoldWriteContract`
-- Surface user-facing errors with `notification` / `getParsedError` from `~~/utils/scaffold-eth`.
-
-Hook usage sketch:
+- Prefer **`useAaveHackathonMnzd`** from UI code; do not re-implement Pool calls.
+- Keep **approve** and **supply/repay** as separate user confirms (except gateway ETH).
+- Do **not** hardcode addresses in components — load from `hackathon-market.json` / typed config.
+- Use Scaffold-ETH hooks: `useScaffoldReadContract`, `useScaffoldWriteContract`.
+- Surface errors with `notification` / `getParsedError` from `~~/utils/scaffold-eth`.
+- For risk copy, respect `utils/risk/wording.ts` (forbidden phrases are tested).
 
 ```tsx
-import { useAaveSepolia } from "~~/hooks/aave/useAaveSepolia";
+import { useAaveHackathonMnzd } from "~~/hooks/aave/useAaveHackathonMnzd";
 
-const { state, approve, supply, withdraw, withdrawAll, refresh, config } = useAaveSepolia();
+const { state, approve, supply, borrow, repay, wrapEth, supplyEth, mint, refresh } =
+  useAaveHackathonMnzd("wETH"); // or "wBTC" | "dNZD"
 ```
-
-Full return-type notes: [AAVE_SEPOLIA.md §11](./AAVE_SEPOLIA.md#11-how-another-engineer-uses-the-hook).
 
 ---
 
@@ -156,20 +159,18 @@ Full return-type notes: [AAVE_SEPOLIA.md §11](./AAVE_SEPOLIA.md#11-how-another-
 
 | Symptom | Likely cause | What to do |
 |---------|--------------|------------|
-| “Wrong network” / reads empty | Wallet not on Sepolia | Switch to Sepolia (`11155111`) or use **Switch to Sepolia** |
-| Tx fails immediately / “insufficient funds” | No Sepolia ETH for gas | Use a Sepolia ETH faucet |
-| Wallet EURS is `0` | Not minted, or wrong token | Mint **EURS** from the Aave Sepolia faucet above |
-| Supply reverts with error `51` | Tried capped USDC (or wrong asset) | Use EURS from this market only |
-| Supply says allowance too low | Approve not done or amount too small | Approve the exact amount first, then supply |
-| RPC / rate-limit errors | Free Alchemy quota | Create your own Alchemy app key; retry later |
-| Decimals mismatch warning | On-chain `decimals()` ≠ address-book metadata | Check `aaveSepoliaConfig` and address-book package version |
-| Withdraw reverts | Low market liquidity or position constraints | Try a smaller amount; see limitations in AAVE_SEPOLIA.md |
+| Wrong network / empty reads | Not on Sepolia | Switch to `11155111` |
+| Tx fails / insufficient funds | No Sepolia ETH | Faucet gas |
+| Cannot mint dNZD/wBTC | Not token owner | Ask admin to mint to you |
+| Borrow reverts | dNZD pool liquidity 0 | Admin supplies dNZD; check `yarn risk:smoke` |
+| Wrapped “WETH” useless | Used canonical Sepolia WETH | Wrap via **this** market’s WETH9 / gateway |
+| Allowance too low | Approve not done | Approve exact amount, then supply/repay |
+| RPC rate limits | Shared Alchemy key | Use your own `ALCHEMY_API_KEY` |
+| Weird borrow capacity vs NZD story | dNZD priced as US$1 | See HANDOVER §4.2 |
 
 ---
 
 ## 7. Verification commands
-
-From the repo root (with `ALCHEMY_API_KEY` set for smoke):
 
 ```bash
 yarn test:aave
@@ -177,6 +178,7 @@ yarn next:check-types
 yarn next:lint
 yarn next:build
 yarn aave:smoke
+cd packages/nextjs && yarn risk:smoke
 ```
 
 ---
@@ -185,8 +187,9 @@ yarn aave:smoke
 
 | Doc | When |
 |-----|------|
-| [AAVE_SEPOLIA.md](./AAVE_SEPOLIA.md) | Hook API, address book, known limitations |
-| [Scaffold-ETH 2 docs](https://docs.scaffoldeth.io) | Hooks, components, general SE-2 patterns |
-| README Quickstart (`yarn chain` / `yarn deploy`) | Only if you want a **local** Hardhat playground — not required for Aave Sepolia |
+| [HANDOVER.md](./HANDOVER.md) | Blockers, repo map, suggested build order |
+| [AAVE_HACKATHON_MNZD.md](./AAVE_HACKATHON_MNZD.md) | Asset table, e2e env vars |
+| [BUILD_PLAN.md](./BUILD_PLAN.md) | Pitch honesty / product framing |
+| [Scaffold-ETH 2 docs](https://docs.scaffoldeth.io) | SE-2 patterns |
 
-**Reminder:** Sepolia test EURS is a prototype asset only. It is **not** NZDD and **not** production.
+**Reminder:** dNZD and Sepolia EURS are prototype assets only. Not NZDD. Not production.

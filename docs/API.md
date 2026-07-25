@@ -21,6 +21,7 @@ Machine-readable spec: [`GET /api/v1/openapi.json`](#get-apiv1openapijson) (Open
 - [`GET /api/v1/binance/token/search`](#get-apiv1binancetokensearch)
 - [`GET /api/v1/binance/token/dynamic`](#get-apiv1binancetokendynamic)
 - [`GET /api/v1/binance/token/meta`](#get-apiv1binancetokenmeta)
+- [`GET|POST /api/v1/binance/chat`](#using-the-api-as-agent-tools) — LLM agent; needs `OPENAI_API_KEY`
 - [`GET /api/v1/openapi.json`](#get-apiv1openapijson)
 - [Using the API as agent tools](#using-the-api-as-agent-tools)
 - [Requirements for clients](#requirements-for-clients)

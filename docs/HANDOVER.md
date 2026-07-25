@@ -126,41 +126,25 @@ So roughly **US$6.39M of collateral is posted** (1 wETH ≈ $1,854 plus 100 wBTC
 
 ## 3. Read this before you trust the other docs
 
-`docs/BUILD_PLAN.md` calls itself the source of truth and is a genuinely good document — but
-**it describes a market that has been replaced.** A newer market was deployed (commit
-`02bbbc7 feat: pointed at deployment with new codes`) and only `hackathon-market.json` was
-updated. The plan was not.
-
-| | `BUILD_PLAN.md` says | Actually live now |
-| :--- | :--- | :--- |
-| Asset name | `mNZD` | `dNZD` |
-| Pool | `0xB0ce6154…CC69` | `0xe1556e1f…275e` |
-| Admin key | `0x3C51093c…e434` | `0x1bE00A54…F10f` |
-| wETH price feed | `MockAggregator`, constant $1,800 | **real Chainlink ETH/USD**, live |
-| wBTC price feed | `MockAggregator`, constant $27,000 | **real Chainlink BTC/USD**, live |
-| wETH ever supplied | "zero, never executed" | **1 wETH supplied** |
-| wBTC ever supplied | "zero, never executed" | **100 wBTC supplied** |
-| dNZD/mNZD supplied | 30 | **0** |
-
-**Consequences for you:**
-
-- Every transaction hash in `BUILD_PLAN.md` §10 is against the **old** pool. That table is
-  history for a market nobody is using. Do not cite it as evidence about the current one.
-- `BUILD_PLAN.md` §2 spends considerable effort on the mock-oracle problem. Two-thirds of it
-  is already solved. The remaining third — dNZD priced in USD — is real and still open.
-- §16's address block is stale. **`packages/nextjs/config/hackathon-market.json` is the only
-  address source you should trust**, and it is what the app actually loads.
-
-Status of the other docs:
+**This file (§2) and `packages/nextjs/config/hackathon-market.json` are the address / liquidity
+source of truth.** Other docs were reconciled on 25 Jul 2026 against the current market.
 
 | Doc | Trust it for | Caveat |
 | :--- | :--- | :--- |
-| `docs/API.md` | The public API surface | Accurate and genuinely good. Written to a high standard |
-| `docs/BORROW_RISK_ASSISTANT.md` | Risk methodology | Accurate |
-| `docs/AAVE_HACKATHON_MNZD.md` | `/mnzd` runbook | Broadly accurate |
-| `docs/AAVE_SEPOLIA.md` | The official EURS reference path | Accurate but describes a **secondary** path |
-| `docs/WEB2_HANDOFF.md` | Web2→web3 mental model (§2 is good) | **Stale on product.** Entirely EURS/`/aave`-focused, which is no longer the product |
-| `docs/BUILD_PLAN.md` | Product framing, pitch honesty rules, §8's conceptual clarifications | **Stale on addresses and status.** See table above |
+| `docs/HANDOVER.md` (this file) | Live state, blockers, product gaps, build order | Re-run `yarn risk:smoke` if balances may have changed |
+| `README.md` | Quickstart and doc index | Points here for blockers |
+| `docs/API.md` | Public API surface | Accurate |
+| `docs/BORROW_RISK_ASSISTANT.md` | Risk methodology, demo script | Accurate; seeding section matches current liquidity story |
+| `docs/AAVE_HACKATHON_MNZD.md` | `/mnzd` runbook + address table | Accurate |
+| `docs/AAVE_SEPOLIA.md` | Official EURS reference (`/aave`) | Secondary path — hidden from nav |
+| `docs/WEB2_HANDOFF.md` | Web2→web3 onboarding for `/mnzd` | Primary path is dNZD, not EURS |
+| `docs/BUILD_PLAN.md` | Product framing, pitch honesty, active seam | Live addresses/status aligned with this file; superseded-market history in its §17 |
+
+### Historical footnote (superseded market)
+
+An earlier private market used **mNZD**, pool `0xB0ce6154…CC69`, admin `0x3C51…e434`, and
+mock ETH/BTC aggregators. Frontend was pointed at the current deployment in commit
+`02bbbc7`. Do not cite old tx hashes or that pool as evidence about today’s market.
 
 ---
 
@@ -451,7 +435,7 @@ What is prototype-only:
    Until that exists, the core product story is unproven on this pool.
 3. Decide the oracle denomination (§4.2) and fix the `USD base` label to match.
 4. Reduce the admin's 100 wBTC position, or demo from a clean second wallet.
-5. Correct or archive `BUILD_PLAN.md` so the next person is not misled.
+5. Keep `BUILD_PLAN.md` / this handover aligned when addresses or liquidity change.
 
 **Phase 1 — make it legible (days)**
 
@@ -540,8 +524,8 @@ Before any public deployment: `OPENAI_API_KEY` is spent by unauthenticated `POST
 
 ## 11. Traps
 
-- **`BUILD_PLAN.md` is stale.** §3. It reads authoritative and is wrong about addresses, the
-  admin key, the oracles, and what has been supplied.
+- **Prefer this file + `hackathon-market.json` over memory.** Older chat/docs may still say
+  `mNZD` or pool `0xB0ce…CC69` — that market is gone.
 - **This market has its own WETH9** at `0xA9e6db07…2B508`. It is neither canonical Sepolia WETH
   nor Aave's official Sepolia WETH. ETH wrapped anywhere else is useless here. Users must wrap
   through this contract or the gateway.

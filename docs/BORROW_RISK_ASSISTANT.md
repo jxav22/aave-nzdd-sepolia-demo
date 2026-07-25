@@ -73,10 +73,10 @@ by `BPS²` and divided exactly once, so per-leg truncation cannot compound.
 
 ### Why absolute oracle prices do not skew the stress table
 
-This demo market prices wETH via Chainlink Sepolia ETH/USD and treats one dNZD as one
-base-currency unit ($1 mock). Absolute levels can still diverge from mainnet ETH or real
-NZD. That does not matter for the stress table, because with wETH the only collateral the
-price level cancels out:
+This demo market prices wETH via live Chainlink Sepolia ETH/USD and treats one dNZD as one
+base-currency unit ($1 mock, USD-referenced). Absolute levels can still diverge from
+mainnet ETH or real NZD. That does not matter for the stress table, because with wETH as
+the only shockable collateral the price level cancels out:
 
 ```
 HF(x) = C·(1+x)·LT / D = HF₀ × (1 + x)
@@ -186,29 +186,28 @@ amount field; the user still reviews and confirms the borrow themselves.
 
 ## Prerequisite: seeding the market
 
-The Generation 2 hackathon market is deployed but **unseeded** — the dNZD reserve holds
-no liquidity and no wETH has been supplied. The assistant reads this correctly and warns
-about it, but a real borrow will revert until the pool is funded.
-
-Verify the current state:
+Reconcile live balances with [HANDOVER.md](./HANDOVER.md) §2 or:
 
 ```bash
 cd packages/nextjs
 yarn risk:smoke
 ```
 
-Look for `dNZD pool liquidity 0`. To seed, from the `/mnzd` page with the dNZD token
-owner wallet connected:
+At last handover read, **crypto collateral was already supplied** (admin: 1 wETH + 100 wBTC)
+but **dNZD pool liquidity was 0**. The assistant surfaces empty liquidity correctly; a real
+borrow still reverts until the dNZD reserve is funded.
+
+Look for `dNZD pool liquidity 0`. To seed, from `/mnzd` with the dNZD token-owner wallet:
 
 1. **Supply dNZD liquidity.** dNZD tab → *Owner faucet* → mint e.g. `100000` → *Approve*
    → *Supply*. This gives the reserve something to lend.
-2. **Supply wETH collateral.** wETH tab → enter e.g. `1` → *Supply ETH* (the gateway wraps
-   and supplies in one transaction).
-3. **Confirm.** Re-run `yarn risk:smoke`; `dNZD pool liquidity` and `collateral (base)`
-   should both be non-zero, and `collateral legs` should be 1.
+2. **Supply wETH collateral** (if your demo wallet has none). wETH tab → *Supply ETH*
+   (gateway wraps + supplies in one tx). Prefer a second wallet with realistic size — the
+   admin’s 100 wBTC position is absurd for demos.
+3. **Confirm.** Re-run `yarn risk:smoke`; `dNZD pool liquidity` should be non-zero.
 
-Step 1 requires the dNZD owner key. If you do not hold it, ask the owner to mint to your
-address first; the rest of the flow needs no special permissions.
+Step 1 requires the dNZD owner key (`0x1bE00A54…F10f`). If you do not hold it, ask the
+owner to mint/supply; borrowers only need collateral + gas.
 
 ## Demo script
 
@@ -235,11 +234,13 @@ address first; the rest of the flow needs no special permissions.
 
 ## Known limitations
 
-- **Oracle divergence.** Binance reports ETH in USD; the demo oracle treats NZ$1 as US$1
-  and fixes ETH at 1800. The assistant discloses the gap rather than reconciling it —
-  reconciling would require changing the oracle and destabilising a working demo. The
-  stress table is unaffected (see *scale invariance* above); only absolute capacity is
-  understated, by roughly 44%.
+- **Oracle divergence / NZD mispricing.** Binance reports ETH in USD; wETH/wBTC use live
+  Chainlink Sepolia USD feeds; dNZD’s mock feed is still **US$1** rather than NZ$1. The
+  assistant discloses gaps rather than reconciling FX. The stress table is unaffected
+  (see *scale invariance* above); absolute borrow capacity in “dNZD units” is understated
+  by roughly ~40% until the oracle is fixed (HANDOVER §4.2).
+- **Live Chainlink prices drift.** Health factors and capacity change between runs — do not
+  script a demo around an exact number.
 - **Mainnet ETH as the proxy for Sepolia wETH.** Sepolia test tokens have no meaningful
   market, so mainnet ETH behaviour is the only realistic input.
 - **Rate limiting is per-instance.** Module-scope token buckets do not span serverless
