@@ -253,6 +253,7 @@ export function buildOpenApiDocument(origin: string) {
             },
             "400": errorResponse,
             "429": errorResponse,
+            "502": errorResponse,
             "503": errorResponse,
           },
         },

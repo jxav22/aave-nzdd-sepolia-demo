@@ -135,7 +135,7 @@ export function parseSearchHits(payload: unknown): TokenSearchHit[] {
 }
 
 export async function searchTokens(keyword: string, chainIds?: string): Promise<TokenSearchHit[]> {
-  const trimmed = keyword.trim();
+  const trimmed = keyword.trim().slice(0, 64);
   if (!trimmed) {
     return [];
   }

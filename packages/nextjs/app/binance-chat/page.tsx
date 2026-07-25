@@ -62,6 +62,7 @@ const BinanceChatPage: NextPage = () => {
   const [model, setModel] = useState("gpt-4o-mini");
   const [envHint, setEnvHint] = useState("Set OPENAI_API_KEY in packages/nextjs/.env.local");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const sendingLock = useRef(false);
 
   useEffect(() => {
     void (async () => {
@@ -88,10 +89,11 @@ const BinanceChatPage: NextPage = () => {
   const send = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed || isSending) {
+      if (!trimmed || sendingLock.current) {
         return;
       }
 
+      sendingLock.current = true;
       setError(null);
       const userMessage: UiMessage = { id: newId(), role: "user", content: trimmed };
       const historyForApi = [...messages, userMessage]
@@ -109,7 +111,8 @@ const BinanceChatPage: NextPage = () => {
           body: JSON.stringify({ messages: historyForApi }),
         });
         const body = (await response.json()) as ChatResponse;
-        if (!response.ok || !body.ok || !body.data) {
+        const data = body.data;
+        if (!response.ok || !body.ok || !data) {
           if (body.error?.code === "MISSING_CONFIG") {
             setConfigured(false);
           }
@@ -121,17 +124,18 @@ const BinanceChatPage: NextPage = () => {
           {
             id: newId(),
             role: "assistant",
-            content: body.data!.reply,
-            toolCalls: body.data!.toolCalls,
+            content: data.reply,
+            toolCalls: data.toolCalls,
           },
         ]);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Chat failed.");
       } finally {
+        sendingLock.current = false;
         setIsSending(false);
       }
     },
-    [isSending, messages],
+    [messages],
   );
 
   const onSubmit = (event: FormEvent) => {
@@ -141,7 +145,7 @@ const BinanceChatPage: NextPage = () => {
 
   return (
     <div className="flex flex-col items-center grow pt-8 pb-16 px-4">
-      <div className="w-full max-w-3xl flex flex-col gap-4" style={{ minHeight: "70vh" }}>
+      <div className="w-full max-w-3xl flex flex-col gap-4 min-h-[70vh]">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <ChatBubbleLeftRightIcon className="h-8 w-8" />
@@ -149,8 +153,8 @@ const BinanceChatPage: NextPage = () => {
           </h1>
           <p className="mt-2 text-sm opacity-80">Interactive chatbot demo over public Binance agent skills</p>
           <p className="text-sm opacity-70 mt-1">
-            Dialogue uses OpenAI tool-calling. Token data comes from the same public <code>query-token-info</code>{" "}
-            endpoints as the Agents tab — no Binance API key.
+            Dialogue uses OpenAI tool-calling. Token data comes from the public <code>query-token-info</code> skill
+            (search / dynamic / meta) — no Binance API key.
           </p>
         </div>
 
@@ -168,10 +172,7 @@ const BinanceChatPage: NextPage = () => {
           </p>
         )}
 
-        <div
-          className="bg-base-200 rounded-lg flex flex-col grow border border-base-300"
-          style={{ minHeight: "28rem" }}
-        >
+        <div className="bg-base-200 rounded-lg flex flex-col grow border border-base-300 min-h-[28rem]">
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
             {messages.map(message => (
               <div key={message.id} className={`chat ${message.role === "user" ? "chat-end" : "chat-start"}`}>
@@ -229,7 +230,11 @@ const BinanceChatPage: NextPage = () => {
               className="btn btn-primary"
               disabled={isSending || configured === false || !input.trim()}
             >
-              <PaperAirplaneIcon className="h-4 w-4" />
+              {isSending ? (
+                <span className="loading loading-spinner loading-sm" />
+              ) : (
+                <PaperAirplaneIcon className="h-4 w-4" />
+              )}
               Send
             </button>
           </form>
@@ -239,10 +244,10 @@ const BinanceChatPage: NextPage = () => {
 
         <p className="text-xs opacity-60">
           Companion to the{" "}
-          <Link className="link" href="/binance-agents">
-            Binance Agents
+          <Link className="link" href="/developer-api">
+            Developer API
           </Link>{" "}
-          API demo. Skills from{" "}
+          playground. Skills from{" "}
           <a className="link" href="https://github.com/binance/binance-skills-hub" target="_blank" rel="noreferrer">
             binance/binance-skills-hub
           </a>

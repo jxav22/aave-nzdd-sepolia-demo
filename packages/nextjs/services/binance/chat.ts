@@ -276,6 +276,13 @@ async function callOpenAi(messages: OpenAiMessage[], apiKey: string, model: stri
   return choice;
 }
 
+export class ChatUpstreamError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ChatUpstreamError";
+  }
+}
+
 /**
  * Run one user turn: OpenAI may call Binance skill tools for up to MAX_TOOL_ROUNDS.
  */
@@ -293,15 +300,23 @@ export async function runBinanceSkillsChat(messages: ChatMessage[]): Promise<Cha
   ];
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-    const choice = await callOpenAi(conversation, apiKey, model);
-    const assistantMessage = choice.message!;
+    let choice: OpenAiChoice;
+    try {
+      choice = await callOpenAi(conversation, apiKey, model);
+    } catch (error) {
+      throw new ChatUpstreamError(error instanceof Error ? error.message : "OpenAI request failed.");
+    }
+    const assistantMessage = choice.message;
+    if (!assistantMessage) {
+      throw new ChatUpstreamError("OpenAI response contained no choices.");
+    }
     conversation.push(assistantMessage);
 
     const calls = assistantMessage.tool_calls ?? [];
     if (calls.length === 0) {
       const reply = (assistantMessage.content ?? "").trim();
       if (!reply) {
-        throw new Error("The model returned an empty reply.");
+        throw new ChatUpstreamError("The model returned an empty reply.");
       }
       return {
         reply,
@@ -340,5 +355,5 @@ export async function runBinanceSkillsChat(messages: ChatMessage[]): Promise<Cha
     }
   }
 
-  throw new Error("Tool-calling loop exceeded the maximum number of rounds.");
+  throw new ChatUpstreamError("Tool-calling loop exceeded the maximum number of rounds.");
 }

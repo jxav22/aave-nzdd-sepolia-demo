@@ -6,7 +6,13 @@
  */
 import { checkRateLimit, clientIdentifier, rateLimitHeaders } from "~~/services/api/rateLimit";
 import { ApiError, handleOptions, jsonError, jsonOk, withApiErrorHandling } from "~~/services/api/respond";
-import { getChatModel, isOpenAiConfigured, runBinanceSkillsChat, sanitiseChatMessages } from "~~/services/binance/chat";
+import {
+  ChatUpstreamError,
+  getChatModel,
+  isOpenAiConfigured,
+  runBinanceSkillsChat,
+  sanitiseChatMessages,
+} from "~~/services/binance/chat";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -89,7 +95,7 @@ export async function POST(request: Request): Promise<Response> {
       if (/OPENAI_API_KEY/i.test(message)) {
         throw new ApiError("MISSING_CONFIG", message);
       }
-      if (/OpenAI|HTTP|empty reply|Tool-calling/i.test(message)) {
+      if (error instanceof ChatUpstreamError) {
         throw new ApiError("UPSTREAM_RPC_ERROR", message);
       }
       throw error;
