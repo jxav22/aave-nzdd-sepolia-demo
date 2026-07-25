@@ -22,6 +22,9 @@
   "dependencies": {
     "@aave-dao/aave-address-book": "^4.60.0",
     "@heroicons/react": "~2.2.0",
+    "@privy-io/node": "^0.26.0",
+    "@privy-io/react-auth": "^3.35.1",
+    "@privy-io/wagmi": "^4.0.14",
     "@rainbow-me/rainbowkit": "2.2.9",
     "@react-native-async-storage/async-storage": "~2.2.0",
     "@scaffold-ui/components": "^0.1.12",
@@ -31,6 +34,7 @@
     "blo": "~2.0.0",
     "burner-connector": "0.0.20",
     "daisyui": "5.5.19",
+    "iron-session": "^8.0.4",
     "kubo-rpc-client": "~6.1.0",
     "next": "~16.2.4",
     "next-nprogress-bar": "~2.4.7",
