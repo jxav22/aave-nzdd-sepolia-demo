@@ -16,9 +16,10 @@ export const METHODOLOGY_NOTE =
   "is relative, it is unaffected by the absolute price level the oracle reports.";
 
 export const ORACLE_DIVERGENCE_NOTE =
-  "wETH is priced by the Chainlink ETH/USD feed, and one dNZD is treated as one unit of the market's base " +
-  "currency. The Binance figure is the live ETH market price in US dollars. Borrowing capacity is therefore " +
-  "expressed in the base currency rather than in New Zealand dollars.";
+  "Every figure here is quoted in the market's base currency, in which one dNZD is valued at exactly one unit. " +
+  "wETH is priced by the market's Chainlink feed, and that oracle price is what decides borrowing capacity and " +
+  "liquidation. The Binance figure is the live exchange price, shown for comparison only; the market does not " +
+  "use it.";
 
 export const SOURCES = {
   aavePosition: "Aave Pool.getUserAccountData (Ora NZD market)",

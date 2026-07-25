@@ -195,9 +195,11 @@ describe("borrow risk report", () => {
     expect(oracleDivergence.binanceEthPriceUsd).toBe(1856.73);
     expect(oracleDivergence.note).toMatch(/Chainlink/i);
     // The note must state that dNZD is valued at one base-currency unit, so a reader can see
-    // borrowing capacity is not denominated in New Zealand dollars.
+    // where the figures' common unit of account comes from, and must mark the exchange price
+    // as comparison only so it is not mistaken for what the market prices against.
     expect(oracleDivergence.note).toMatch(/base currency/i);
     expect(oracleDivergence.note).toMatch(/one dNZD/i);
+    expect(oracleDivergence.note).toMatch(/comparison only/i);
   });
 
   it("reconciles the recomputed health factor against the one Aave reports", () => {
