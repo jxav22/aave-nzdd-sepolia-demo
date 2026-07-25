@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AmountField, validateAmount } from "~~/components/ora/AmountField";
+import { TwoStepActions } from "~~/components/ora/TwoStepActions";
 import { TxSteps } from "~~/components/ora/TxSteps";
 import { ActionButton, Card, DataRow, Eyebrow, Note, Stat } from "~~/components/ora/primitives";
 import type { UseAaveHackathonMnzdReturn } from "~~/hooks/aave/useAaveHackathonMnzd";
@@ -56,13 +57,13 @@ export const EarnPanel = ({
   const canAct = Boolean(depositAmount.trim()) && !depositError && actions.state.isCorrectNetwork;
   const canWithdraw = Boolean(withdrawAmount.trim()) && !withdrawError && actions.state.isCorrectNetwork;
 
-  /** True when the typed amount is above the current on-chain allowance. */
-  const needsApproval = (() => {
+  /** Step 1 is done when the typed amount is already covered by allowance. */
+  const allowanceReady = (() => {
     if (!depositAmount.trim()) return false;
     try {
-      return parseTokenAmount(depositAmount, decimals) > actions.state.allowance;
+      return parseTokenAmount(depositAmount, decimals) <= actions.state.allowance;
     } catch {
-      return true;
+      return false;
     }
   })();
 
@@ -144,34 +145,47 @@ export const EarnPanel = ({
           />
         </div>
 
-        {needsApproval ? (
-          <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-            First allow the market to move the amount, then deposit. Each is a separate confirmation in your wallet.
-          </p>
-        ) : null}
-
-        <div className={`${needsApproval ? "mt-4" : "mt-6"} flex flex-wrap items-center gap-3`}>
-          {needsApproval ? (
-            <ActionButton onClick={runApprove} disabled={!canAct} busy={sequence.isRunning}>
-              {depositAmount.trim() && !depositError
-                ? `Allow ${formatNzd(parseSafe(depositAmount, decimals), decimals)}`
-                : "Allow the market"}
-            </ActionButton>
-          ) : null}
-          <ActionButton
-            tone={needsApproval ? "outline" : "primary"}
-            onClick={runDeposit}
-            disabled={!canAct || needsApproval}
-            busy={sequence.isRunning}
-          >
-            {depositAmount.trim() && !depositError
-              ? `Deposit ${formatNzd(parseSafe(depositAmount, decimals), decimals)}`
-              : "Deposit"}
-          </ActionButton>
-          {position.walletBalance === 0n ? (
-            <span className="text-xs text-muted-foreground">You have no New Zealand dollars in your account yet.</span>
-          ) : null}
-        </div>
+        <TwoStepActions
+          stepOne={{
+            title:
+              depositAmount.trim() && !depositError
+                ? `Allow the market to move ${formatNzd(parseSafe(depositAmount, decimals), decimals)}`
+                : "Allow the market to move your dollars",
+            description: "A separate confirmation in your wallet. Required before you can deposit.",
+            done: allowanceReady,
+            action: allowanceReady ? (
+              <span className="text-xs text-muted-foreground">Already allowed for this amount.</span>
+            ) : (
+              <ActionButton onClick={runApprove} disabled={!canAct} busy={sequence.isRunning}>
+                {depositAmount.trim() && !depositError
+                  ? `Allow ${formatNzd(parseSafe(depositAmount, decimals), decimals)}`
+                  : "Allow the market"}
+              </ActionButton>
+            ),
+          }}
+          stepTwo={{
+            title:
+              depositAmount.trim() && !depositError
+                ? `Deposit ${formatNzd(parseSafe(depositAmount, decimals), decimals)}`
+                : "Deposit into the market",
+            description: "Second confirmation. Available once step 1 is done.",
+            locked: !allowanceReady,
+            action: (
+              <>
+                <ActionButton onClick={runDeposit} disabled={!canAct || !allowanceReady} busy={sequence.isRunning}>
+                  {depositAmount.trim() && !depositError
+                    ? `Deposit ${formatNzd(parseSafe(depositAmount, decimals), decimals)}`
+                    : "Deposit"}
+                </ActionButton>
+                {position.walletBalance === 0n ? (
+                  <span className="text-xs text-muted-foreground">
+                    You have no New Zealand dollars in your account yet.
+                  </span>
+                ) : null}
+              </>
+            ),
+          }}
+        />
 
         <TxSteps sequence={sequence} className="mt-5" />
 

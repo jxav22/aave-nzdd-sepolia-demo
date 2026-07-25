@@ -12,6 +12,7 @@ import {
   ScenarioTable,
   StressTestedAmount,
 } from "~~/components/ora/RiskReportView";
+import { TwoStepActions } from "~~/components/ora/TwoStepActions";
 import { TxSteps } from "~~/components/ora/TxSteps";
 import { ActionButton, Card, DataRow, Eyebrow, Note, Pill, Stat } from "~~/components/ora/primitives";
 import type { HackathonAssetSymbol } from "~~/config/aaveHackathonMnzd";
@@ -132,14 +133,18 @@ export const BorrowPanel = ({
 
   const report = liveRisk.report;
 
-  const collateralNeedsApproval = (() => {
+  /** Step 1 is done when the typed collateral amount is already covered by allowance. */
+  const collateralAllowanceReady = (() => {
     if (!collateralAmount.trim()) return false;
     try {
-      return parseTokenAmount(collateralAmount, collateralPosition.decimals) > collateralActions.state.allowance;
+      return parseTokenAmount(collateralAmount, collateralPosition.decimals) <= collateralActions.state.allowance;
     } catch {
-      return true;
+      return false;
     }
   })();
+
+  const canDepositCollateral =
+    Boolean(collateralAmount.trim()) && !collateralError && positions.isCorrectNetwork;
 
   const runApproveCollateral = async () => {
     const amount = collateralAmount;
@@ -206,14 +211,14 @@ export const BorrowPanel = ({
     }
   };
 
-  /** One allowance covering full debt is enough for partial or full repay. */
-  const repayNeedsApproval =
+  /** Step 1 done when allowance covers full debt (enough for partial or full repay). */
+  const repayAllowanceReady =
     nzdPosition.borrowed > 0n &&
     (() => {
       try {
-        return parseTokenAmount(debtBare, nzdDecimals) > nzdActions.state.allowance;
+        return parseTokenAmount(debtBare, nzdDecimals) <= nzdActions.state.allowance;
       } catch {
-        return true;
+        return false;
       }
     })();
 
@@ -252,9 +257,9 @@ export const BorrowPanel = ({
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Step one, collateral */}
+        {/* Journey: collateral, then borrow. Wallet confirmations use TwoStepActions (Step 1 / 2). */}
         <Card>
-          <Eyebrow>Step one</Eyebrow>
+          <Eyebrow>Collateral</Eyebrow>
           <h2 className="mt-2 font-display text-3xl">Deposit what you already hold</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Your ETH or Bitcoin stays yours. It is held as security against the loan, and you get it back when you
@@ -304,39 +309,40 @@ export const BorrowPanel = ({
             />
           </div>
 
-          {collateralNeedsApproval ? (
-            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-              First allow the market to move your {COLLATERAL_LABEL[collateralSymbol]}, then deposit. Each is a separate
-              confirmation in your wallet.
-            </p>
-          ) : null}
-
-          <div className={`${collateralNeedsApproval ? "mt-4" : "mt-5"} flex flex-col gap-3`}>
-            {collateralNeedsApproval ? (
-              <ActionButton
-                onClick={runApproveCollateral}
-                disabled={!collateralAmount.trim() || Boolean(collateralError) || !positions.isCorrectNetwork}
-                busy={collateralSequence.isRunning}
-                full
-              >
-                Allow {COLLATERAL_LABEL[collateralSymbol]}
-              </ActionButton>
-            ) : null}
-            <ActionButton
-              tone={collateralNeedsApproval ? "outline" : "primary"}
-              onClick={runDepositCollateral}
-              disabled={
-                !collateralAmount.trim() ||
-                Boolean(collateralError) ||
-                !positions.isCorrectNetwork ||
-                collateralNeedsApproval
-              }
-              busy={collateralSequence.isRunning}
-              full
-            >
-              Deposit as collateral
-            </ActionButton>
-          </div>
+          <TwoStepActions
+            stepOne={{
+              title: `Allow the market to move your ${COLLATERAL_LABEL[collateralSymbol]}`,
+              description: "A separate confirmation in your wallet. Required before you can deposit.",
+              done: collateralAllowanceReady,
+              action: collateralAllowanceReady ? (
+                <span className="text-xs text-muted-foreground">Already allowed for this amount.</span>
+              ) : (
+                <ActionButton
+                  onClick={runApproveCollateral}
+                  disabled={!canDepositCollateral}
+                  busy={collateralSequence.isRunning}
+                  full
+                >
+                  Allow {COLLATERAL_LABEL[collateralSymbol]}
+                </ActionButton>
+              ),
+            }}
+            stepTwo={{
+              title: "Deposit as collateral",
+              description: "Second confirmation. Available once step 1 is done.",
+              locked: !collateralAllowanceReady,
+              action: (
+                <ActionButton
+                  onClick={runDepositCollateral}
+                  disabled={!canDepositCollateral || !collateralAllowanceReady}
+                  busy={collateralSequence.isRunning}
+                  full
+                >
+                  Deposit as collateral
+                </ActionButton>
+              ),
+            }}
+          />
 
           {collateralSymbol === "wETH" ? (
             <div className="hairline mt-6 pt-5">
@@ -392,9 +398,8 @@ export const BorrowPanel = ({
           </div>
         </Card>
 
-        {/* Step two, borrow */}
         <Card>
-          <Eyebrow>Step two</Eyebrow>
+          <Eyebrow>Borrow</Eyebrow>
           <h2 className="mt-2 font-display text-3xl">Borrow New Zealand dollars</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Interest accrues at {formatPercent(nzdReserve?.borrowApyPercent ?? 0)}, variable. There is no repayment
@@ -620,42 +625,53 @@ export const BorrowPanel = ({
                 <DataRow label="Available to repay with" value={formatNzd(nzdPosition.walletBalance, nzdDecimals)} />
                 <DataRow label="Interest rate" value={formatPercent(nzdReserve?.borrowApyPercent ?? 0)} />
               </div>
-              {repayNeedsApproval ? (
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  First allow the market to collect the repayment, then repay. Each is a separate confirmation.
-                </p>
-              ) : null}
-              <div className="flex flex-wrap gap-3">
-                {repayNeedsApproval ? (
-                  <ActionButton
-                    onClick={runApproveRepay}
-                    disabled={!positions.isCorrectNetwork}
-                    busy={repaySequence.isRunning}
-                  >
-                    Allow repayment
-                  </ActionButton>
-                ) : null}
-                <ActionButton
-                  tone={repayNeedsApproval ? "outline" : "primary"}
-                  onClick={() => runRepay(false)}
-                  disabled={
-                    !repayAmount.trim() || Boolean(repayError) || !positions.isCorrectNetwork || repayNeedsApproval
-                  }
-                  busy={repaySequence.isRunning}
-                >
-                  Repay
-                </ActionButton>
-                <ActionButton
-                  tone="outline"
-                  onClick={() => runRepay(true)}
-                  disabled={!positions.isCorrectNetwork || repayNeedsApproval}
-                  busy={repaySequence.isRunning}
-                >
-                  Repay everything
-                </ActionButton>
-              </div>
             </div>
           </div>
+
+          <TwoStepActions
+            stepOne={{
+              title: "Allow the market to collect your repayment",
+              description: "A separate confirmation in your wallet. Required before you can repay.",
+              done: repayAllowanceReady,
+              action: repayAllowanceReady ? (
+                <span className="text-xs text-muted-foreground">Already allowed for what you owe.</span>
+              ) : (
+                <ActionButton
+                  onClick={runApproveRepay}
+                  disabled={!positions.isCorrectNetwork}
+                  busy={repaySequence.isRunning}
+                >
+                  Allow repayment
+                </ActionButton>
+              ),
+            }}
+            stepTwo={{
+              title: "Repay what you owe",
+              description: "Second confirmation. Available once step 1 is done.",
+              locked: !repayAllowanceReady,
+              action: (
+                <>
+                  <ActionButton
+                    onClick={() => runRepay(false)}
+                    disabled={
+                      !repayAmount.trim() || Boolean(repayError) || !positions.isCorrectNetwork || !repayAllowanceReady
+                    }
+                    busy={repaySequence.isRunning}
+                  >
+                    Repay
+                  </ActionButton>
+                  <ActionButton
+                    tone="outline"
+                    onClick={() => runRepay(true)}
+                    disabled={!positions.isCorrectNetwork || !repayAllowanceReady}
+                    busy={repaySequence.isRunning}
+                  >
+                    Repay everything
+                  </ActionButton>
+                </>
+              ),
+            }}
+          />
 
           <TxSteps sequence={repaySequence} className="mt-5" />
         </Card>
