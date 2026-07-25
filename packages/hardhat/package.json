@@ -18,7 +18,6 @@
     "generate": "yarn account:generate",
     "hardhat-verify": "hardhat verify",
     "lint": "eslint",
-    "lint-staged": "eslint",
     "test": "hardhat test --network hardhat --gas-stats",
     "verify": "tsx scripts/runVerify.ts"
   },
