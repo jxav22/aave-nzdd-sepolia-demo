@@ -194,7 +194,10 @@ describe("borrow risk report", () => {
     expect(oracleDivergence.aaveCollateralPrice.formatted).toBe("1800");
     expect(oracleDivergence.binanceEthPriceUsd).toBe(1856.73);
     expect(oracleDivergence.note).toMatch(/Chainlink/i);
-    expect(oracleDivergence.note).toMatch(/\$1 mock/i);
+    // The note must state that dNZD is valued at one base-currency unit, so a reader can see
+    // borrowing capacity is not denominated in New Zealand dollars.
+    expect(oracleDivergence.note).toMatch(/base currency/i);
+    expect(oracleDivergence.note).toMatch(/one dNZD/i);
   });
 
   it("reconciles the recomputed health factor against the one Aave reports", () => {
@@ -269,7 +272,7 @@ describe("degraded and empty states", () => {
       },
     });
 
-    expect(report({ position: empty }).explanation).toMatch(/no collateral supplied/i);
+    expect(report({ position: empty }).explanation).toMatch(/no collateral deposited/i);
   });
 
   it("warns that a borrow would revert while the reserve holds no liquidity", () => {

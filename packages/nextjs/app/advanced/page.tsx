@@ -136,7 +136,7 @@ const AdvancedPage: NextPage = () => {
             <Address address={selectedAssetConfig.underlyingAddress} chain={sepolia} />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="font-semibold">Hackathon Pool</span>
+            <span className="font-semibold">Lending pool</span>
             <a className="link break-all" href={explorerAddress(config.poolAddress)} target="_blank" rel="noreferrer">
               {config.poolAddress}
             </a>

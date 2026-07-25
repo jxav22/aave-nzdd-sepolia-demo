@@ -12,16 +12,16 @@ export const DISCLAIMER =
   "Aave decides borrowing limits and liquidation using its own oracle. The final decision remains with you.";
 
 export const METHODOLOGY_NOTE =
-  "Scenarios apply a relative price move to the Aave oracle price of the collateral. Because the stress test " +
-  "is relative, it is unaffected by the absolute price level the demo oracle is configured with.";
+  "Scenarios apply a relative price move to the oracle price of the collateral. Because the stress test " +
+  "is relative, it is unaffected by the absolute price level the oracle reports.";
 
 export const ORACLE_DIVERGENCE_NOTE =
-  "This demo market prices wETH via Chainlink Sepolia ETH/USD and treats one dNZD as one base-currency unit ($1 mock). " +
-  "The Binance figure is the live ETH market price in US dollars. Borrowing capacity is illustrative of the demo " +
-  "market, not of real-world NZD value.";
+  "wETH is priced by the Chainlink ETH/USD feed, and one dNZD is treated as one unit of the market's base " +
+  "currency. The Binance figure is the live ETH market price in US dollars. Borrowing capacity is therefore " +
+  "expressed in the base currency rather than in New Zealand dollars.";
 
 export const SOURCES = {
-  aavePosition: "Aave Pool.getUserAccountData (hackathon market, Sepolia)",
+  aavePosition: "Aave Pool.getUserAccountData (Ora NZD market)",
   aaveOracle: "Aave oracle getAssetPrice + ProtocolDataProvider reserve configuration",
   binance: "Binance Skill query-token-info (dynamic + kline), public endpoints, no authentication",
   engine: "Deterministic stress engine (utils/risk/stress.ts)",
@@ -42,8 +42,8 @@ export const FORBIDDEN_PHRASES = [
 ];
 
 export const LIQUIDITY_WARNING = (symbol: string) =>
-  `The ${symbol} reserve currently holds no available liquidity, so a borrow transaction would revert regardless ` +
-  `of your borrowing capacity. This is a state of the demo market, not of your position.`;
+  `The ${symbol} pool currently holds no available liquidity, so a borrow transaction would revert regardless ` +
+  `of your borrowing capacity. This reflects the state of the pool, not of your position.`;
 
 export const PARTIAL_LIQUIDITY_WARNING = (symbol: string, available: string) =>
   `The ${symbol} reserve holds ${available} ${symbol} of available liquidity, which is less than your borrowing ` +
@@ -58,6 +58,6 @@ export const RECONCILIATION_WARNING =
   "the protocol values this position. Treat them with caution.";
 
 export const NO_COLLATERAL_EXPLANATION =
-  "This wallet has no collateral supplied to the hackathon market, so there is no borrowing capacity to " +
-  "stress-test yet. Supply wETH first, then return here to see how a proposed dNZD borrow would behave under " +
-  "recent ETH market conditions.";
+  "This account has no collateral deposited, so there is no borrowing capacity to stress-test yet. Deposit " +
+  "wETH first, then return here to see how a proposed dNZD borrow would behave under recent ETH market " +
+  "conditions.";
