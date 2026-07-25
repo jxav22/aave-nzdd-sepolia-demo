@@ -16,9 +16,9 @@ export const METHODOLOGY_NOTE =
   "is relative, it is unaffected by the absolute price level the demo oracle is configured with.";
 
 export const ORACLE_DIVERGENCE_NOTE =
-  "This demo market uses fixed mock oracle prices and treats one dNZD as one base-currency unit. The Binance " +
-  "figure is the live ETH market price in US dollars. The two differ, so borrowing capacity shown here is " +
-  "illustrative of the demo market, not of real-world NZD value.";
+  "This demo market prices wETH via Chainlink Sepolia ETH/USD and treats one dNZD as one base-currency unit ($1 mock). " +
+  "The Binance figure is the live ETH market price in US dollars. Borrowing capacity is illustrative of the demo " +
+  "market, not of real-world NZD value.";
 
 export const SOURCES = {
   aavePosition: "Aave Pool.getUserAccountData (hackathon market, Sepolia)",

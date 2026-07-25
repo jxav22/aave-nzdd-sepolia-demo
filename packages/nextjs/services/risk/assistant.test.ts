@@ -193,7 +193,8 @@ describe("borrow risk report", () => {
 
     expect(oracleDivergence.aaveCollateralPrice.formatted).toBe("1800");
     expect(oracleDivergence.binanceEthPriceUsd).toBe(1856.73);
-    expect(oracleDivergence.note).toMatch(/mock oracle/i);
+    expect(oracleDivergence.note).toMatch(/Chainlink/i);
+    expect(oracleDivergence.note).toMatch(/\$1 mock/i);
   });
 
   it("reconciles the recomputed health factor against the one Aave reports", () => {

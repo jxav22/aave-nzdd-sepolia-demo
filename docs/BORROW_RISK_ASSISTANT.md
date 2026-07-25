@@ -71,11 +71,12 @@ HF(x) = Σ (collateral_i × (1 + x·shockable_i) × liquidationThreshold_i) / to
 All of it is integer arithmetic over base-currency units. The sum is accumulated scaled
 by `BPS²` and divided exactly once, so per-leg truncation cannot compound.
 
-### Why the mock oracle is not a problem
+### Why absolute oracle prices do not skew the stress table
 
-This demo market prices wETH at a fixed 1800 and treats NZ$1 as one base-currency unit.
-Neither matches reality. It does not matter for the stress table, because with wETH the
-only collateral the price level cancels out:
+This demo market prices wETH via Chainlink Sepolia ETH/USD and treats one dNZD as one
+base-currency unit ($1 mock). Absolute levels can still diverge from mainnet ETH or real
+NZD. That does not matter for the stress table, because with wETH the only collateral the
+price level cancels out:
 
 ```
 HF(x) = C·(1+x)·LT / D = HF₀ × (1 + x)

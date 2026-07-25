@@ -12,13 +12,21 @@ Machine-readable spec: [`GET /api/v1/openapi.json`](#get-apiv1openapijson) (Open
 
 ## Contents
 
+- [Interactive demo](#interactive-demo)
 - [Conventions](#conventions)
 - [`GET /api/v1/borrow-risk`](#get-apiv1borrow-risk)
 - [`POST /api/v1/borrow-risk/simulate`](#post-apiv1borrow-risksimulate)
 - [`GET /api/v1/position/{address}`](#get-apiv1positionaddress)
 - [`GET /api/v1/market/eth`](#get-apiv1marketeth)
+- [`GET /api/v1/binance/token/search`](#get-apiv1binancetokensearch)
 - [`GET /api/v1/openapi.json`](#get-apiv1openapijson)
 - [Requirements for clients](#requirements-for-clients)
+
+## Interactive demo
+
+In the Scaffold-ETH app, open the **Developer API** tab (`/developer-api`). It exercises every
+v1 route with live forms, summary cards, and the raw response envelope (status, rate-limit
+headers, JSON body).
 
 ## Conventions
 
@@ -270,6 +278,24 @@ curl "http://localhost:3000/api/v1/market/eth"
 
 `dailySigmaPercent` is the sample standard deviation of daily log returns.
 `maxDrawdown30dPercent` is the deepest intraday-high to intraday-low fall in the window.
+
+---
+
+## `GET /api/v1/binance/token/search`
+
+Proxies the public Binance Web3 `query-token-info` search skill. No authentication.
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `q` | yes | Token symbol, name, or contract address (max 64 chars). |
+| `chainIds` | no | Comma-separated allowlisted ids: `1`, `56`, `8453`, `CT_501`. |
+
+```bash
+curl "http://localhost:3000/api/v1/binance/token/search?q=WETH&chainIds=1"
+```
+
+Returns `results[]` (chain, contract, symbol, price, volume, liquidity) plus `provenance`
+naming the skill and upstream endpoint.
 
 ---
 

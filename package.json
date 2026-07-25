@@ -43,6 +43,7 @@
     "next:lint": "yarn workspace @se-2/nextjs lint",
     "next:serve": "yarn workspace @se-2/nextjs serve",
     "aave:smoke": "yarn workspace @se-2/nextjs aave:smoke",
+    "aave:e2e": "yarn workspace @se-2/nextjs aave:e2e",
     "test:aave": "yarn workspace @se-2/nextjs test:aave",
     "precommit": "lint-staged",
     "start": "yarn workspace @se-2/nextjs dev",

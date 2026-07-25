@@ -1,11 +1,17 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { hardhat } from "viem/chains";
-import { Bars3Icon, BugAntIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
+import {
+  Bars3Icon,
+  BugAntIcon,
+  ChatBubbleLeftRightIcon,
+  CpuChipIcon,
+  CurrencyDollarIcon,
+} from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
 
@@ -26,6 +32,16 @@ export const menuLinks: HeaderMenuLink[] = [
     icon: <CurrencyDollarIcon className="h-4 w-4" />,
   },
   {
+    label: "Developer API",
+    href: "/developer-api",
+    icon: <CpuChipIcon className="h-4 w-4" />,
+  },
+  {
+    label: "Skills Chat",
+    href: "/binance-chat",
+    icon: <ChatBubbleLeftRightIcon className="h-4 w-4" />,
+  },
+  {
     label: "Debug Contracts",
     href: "/debug",
     icon: <BugAntIcon className="h-4 w-4" />,
@@ -34,6 +50,17 @@ export const menuLinks: HeaderMenuLink[] = [
 
 export const HeaderMenuLinks = () => {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Warm Turbopack compiles for nav targets so the first soft navigation does not
+  // race an uncompiled route (RSC "Failed to fetch" → full reload fallback).
+  useEffect(() => {
+    for (const { href } of menuLinks) {
+      if (href !== "/") {
+        router.prefetch(href);
+      }
+    }
+  }, [router]);
 
   return (
     <>
@@ -43,7 +70,7 @@ export const HeaderMenuLinks = () => {
           <li key={href} className="h-full">
             <Link
               href={href}
-              passHref
+              prefetch
               className={`${
                 isActive ? "bg-base-300" : ""
               } hover:bg-base-300 focus:!bg-base-300 h-full px-4 text-sm gap-2 flex items-center whitespace-nowrap`}
@@ -86,7 +113,7 @@ export const Header = () => {
             <HeaderMenuLinks />
           </ul>
         </details>
-        <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
+        <Link href="/" className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
           <div className="flex relative w-10 h-10">
             <Image alt="SE2 logo" className="cursor-pointer" fill src="/logo.svg" />
           </div>

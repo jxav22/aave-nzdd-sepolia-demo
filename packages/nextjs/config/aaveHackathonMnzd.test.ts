@@ -27,11 +27,13 @@ describe("aaveHackathonMnzdConfig", () => {
     expect(weth.mintable).toBe(false);
     expect(weth.acquisition).toBe("wrapNative");
     expect(isAddress(weth.underlyingAddress)).toBe(true);
+    expect(weth.priceFeedAddress).toBe("0x694AA1769357215DE4FAC081bf1f309aDC325306");
 
     expect(wbtc.decimals).toBe(8);
     expect(wbtc.mintable).toBe(true);
     expect(wbtc.acquisition).toBe("ownerMint");
     expect(isAddress(wbtc.underlyingAddress)).toBe(true);
+    expect(wbtc.priceFeedAddress).toBe("0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43");
   });
 
   it("keeps legacy asset field as dNZD", () => {

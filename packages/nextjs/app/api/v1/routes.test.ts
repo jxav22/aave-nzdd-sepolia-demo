@@ -4,6 +4,7 @@
  * Routes are exercised as plain functions over `Request`/`Response`, so no server and no
  * network are involved. Chain reads are stubbed; the simulate route needs neither.
  */
+import { GET as getChatStatus, POST as postChat } from "./binance/chat/route";
 import { POST as simulate } from "./borrow-risk/simulate/route";
 import { GET as getMarket } from "./market/eth/route";
 import { GET as getOpenApi } from "./openapi.json/route";
@@ -417,6 +418,76 @@ describe("CORS", () => {
   });
 });
 
+describe("GET /api/v1/binance/chat", () => {
+  beforeEach(() => {
+    resetRateLimits();
+    vi.unstubAllEnvs();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("reports when OpenAI is not configured", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "");
+    const response = await getChatStatus(
+      new Request("https://example.test/api/v1/binance/chat", { headers: { "x-forwarded-for": "203.0.113.9" } }),
+    );
+    const body = await readJson(response);
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      data: { configured: false, skill: "query-token-info" },
+    });
+  });
+});
+
+describe("POST /api/v1/binance/chat", () => {
+  beforeEach(() => {
+    resetRateLimits();
+    vi.unstubAllEnvs();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("returns MISSING_CONFIG when OPENAI_API_KEY is absent", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "");
+    const response = await postChat(
+      new Request("https://example.test/api/v1/binance/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": "203.0.113.10" },
+        body: JSON.stringify({ messages: [{ role: "user", content: "price of ETH" }] }),
+      }),
+    );
+    const body = await readJson(response);
+
+    expect(response.status).toBe(503);
+    expect(body).toMatchObject({
+      ok: false,
+      schemaVersion: SCHEMA_VERSION,
+      error: { code: "MISSING_CONFIG" },
+    });
+  });
+
+  it("rejects an empty messages body", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    const response = await postChat(
+      new Request("https://example.test/api/v1/binance/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": "203.0.113.11" },
+        body: JSON.stringify({ messages: [] }),
+      }),
+    );
+    const body = await readJson(response);
+
+    expect(response.status).toBe(400);
+    expect(body).toMatchObject({ ok: false, error: { code: "INVALID_BODY", field: "messages" } });
+  });
+});
+
 describe("GET /api/v1/openapi.json", () => {
   it("describes every public route against the requesting origin", async () => {
     const response = getOpenApi(new Request("https://example.test/api/v1/openapi.json"));
@@ -429,6 +500,8 @@ describe("GET /api/v1/openapi.json", () => {
     expect(document.openapi).toBe("3.1.0");
     expect(document.servers[0].url).toBe("https://example.test");
     expect(Object.keys(document.paths).sort()).toEqual([
+      "/api/v1/binance/chat",
+      "/api/v1/binance/token/search",
       "/api/v1/borrow-risk",
       "/api/v1/borrow-risk/simulate",
       "/api/v1/market/eth",

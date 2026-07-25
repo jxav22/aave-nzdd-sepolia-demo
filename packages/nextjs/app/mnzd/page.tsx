@@ -60,8 +60,8 @@ const MnzdPage: NextPage = () => {
           <p className="mt-2 text-sm opacity-80">{config.marketId}</p>
           <p className="text-base font-medium">Custom Aave V3 — wETH, wBTC, and dNZD on Ethereum Sepolia</p>
           <p className="text-sm opacity-70 mt-1">
-            Supply crypto collateral, borrow dNZD (demo NZD stable, 6 decimals — not production NewMoney issuance). Mock
-            oracles for demo pricing.
+            Supply crypto collateral, borrow dNZD (demo NZD stable, 6 decimals — not production NewMoney issuance).
+            wETH/wBTC use Chainlink Sepolia feeds; dNZD is a $1 mock.
           </p>
         </div>
 

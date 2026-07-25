@@ -168,6 +168,95 @@ export function buildOpenApiDocument(origin: string) {
           },
         },
       },
+      "/api/v1/binance/token/search": {
+        get: {
+          summary: "Binance agent token search (query-token-info)",
+          description:
+            "Proxies the public Binance Web3 `query-token-info` search skill. No authentication. " +
+            "Optional `chainIds` is allowlisted to Ethereum, BSC, Base, and Solana.",
+          operationId: "searchBinanceTokens",
+          parameters: [
+            {
+              name: "q",
+              in: "query",
+              required: true,
+              schema: { type: "string", maxLength: 64 },
+              description: "Token symbol, name, or contract address.",
+            },
+            {
+              name: "chainIds",
+              in: "query",
+              required: false,
+              schema: { type: "string", example: "1,56" },
+              description: "Comma-separated chainIds: 1, 56, 8453, CT_501.",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Search hits.",
+              headers: rateLimitHeaders,
+              content: { "application/json": { schema: { $ref: "#/components/schemas/SuccessEnvelope" } } },
+            },
+            "400": errorResponse,
+            "429": errorResponse,
+          },
+        },
+      },
+      "/api/v1/binance/chat": {
+        get: {
+          summary: "Binance skills chatbot status",
+          description: "Reports whether OPENAI_API_KEY is configured. Binance skill tools need no key.",
+          operationId: "getBinanceChatStatus",
+          responses: {
+            "200": {
+              description: "Configuration status.",
+              headers: rateLimitHeaders,
+              content: { "application/json": { schema: { $ref: "#/components/schemas/SuccessEnvelope" } } },
+            },
+            "429": errorResponse,
+          },
+        },
+        post: {
+          summary: "Binance skills chatbot turn",
+          description:
+            "OpenAI tool-calling over public query-token-info (search / meta / dynamic). Requires OPENAI_API_KEY.",
+          operationId: "postBinanceChat",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["messages"],
+                  properties: {
+                    messages: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        required: ["role", "content"],
+                        properties: {
+                          role: { type: "string", enum: ["user", "assistant"] },
+                          content: { type: "string", maxLength: 2000 },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Assistant reply plus tool provenance.",
+              headers: rateLimitHeaders,
+              content: { "application/json": { schema: { $ref: "#/components/schemas/SuccessEnvelope" } } },
+            },
+            "400": errorResponse,
+            "429": errorResponse,
+            "503": errorResponse,
+          },
+        },
+      },
     },
     components: {
       schemas: {
@@ -199,6 +288,7 @@ export function buildOpenApiDocument(origin: string) {
                     "INVALID_SHOCK",
                     "INVALID_BODY",
                     "RATE_LIMITED",
+                    "MISSING_CONFIG",
                     "UPSTREAM_RPC_ERROR",
                     "INTERNAL_ERROR",
                   ],

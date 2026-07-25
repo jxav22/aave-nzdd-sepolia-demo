@@ -24,7 +24,7 @@ The official Aave Sepolia EURS UI at `/aave` is **hidden from nav** for this dem
 | wBTC | 8 | Owner-only `mint` (TestnetERC20) |
 | dNZD | 6 | Owner-only `mint` (TestnetERC20) |
 
-Oracles are **mocks** (fixed demo prices). Do not treat them as live FX feeds.
+Oracles: **dNZD** uses a `$1` mock; **wETH** / **wBTC** use Chainlink Sepolia ETH/USD and BTC/USD. Testnet feeds — not production NZD FX.
 
 ## User flow
 
@@ -45,6 +45,24 @@ Registered under Sepolia as:
 - `HackathonATokenMnzd` / `HackathonATokenWeth` / `HackathonATokenWbtc`
 - `HackathonDebtMnzd` / `HackathonDebtWeth` / `HackathonDebtWbtc`
 - `HackathonWrappedTokenGateway`
+
+## On-chain e2e (viem / Sepolia)
+
+Gated write tests that exercise the same Pool calls as `useAaveHackathonMnzd` (no UI):
+
+1. **Same-asset dNZD** — mint → approve → supply → borrow → repayAll → withdrawAll  
+2. **Cross-asset** — seed dNZD liquidity → `supplyEth` → borrow dNZD → repayAll → withdraw wETH  
+
+```bash
+# From repo root (requires the dNZD token owner key + Sepolia ETH for gas/wrap)
+# PowerShell:
+$env:AAVE_E2E="1"
+$env:E2E_PRIVATE_KEY="0x..."
+# optional: $env:ALCHEMY_API_KEY="..."  or  $env:SEPOLIA_RPC_URL="..."
+yarn aave:e2e
+```
+
+Fails fast if `AAVE_E2E` / `E2E_PRIVATE_KEY` are missing. Excluded from `yarn test:aave`. Suites live under `packages/nextjs/e2e/`.
 
 ## Refreshing addresses after redeploy
 
