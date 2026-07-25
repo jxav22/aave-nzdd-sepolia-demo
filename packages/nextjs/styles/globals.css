@@ -1,92 +1,151 @@
 @import "tailwindcss";
 
+/*
+  Ora design system — warm editorial NZ banking.
+
+  Palette, type scale and utilities are ported from the Ora design prototype.
+  DaisyUI is retained (the technical panels and Scaffold components depend on it)
+  but its light theme is remapped onto the same palette, so DaisyUI-based pages and
+  hand-built pages read as one product. The design is light-only by intent.
+*/
+
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
-@theme {
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+
+  /*
+    Semantic tokens DaisyUI does not provide.
+
+    DaisyUI owns the `-content` foreground names (`--color-primary-content`) that its own
+    component classes read. These are the `-foreground` names our components use. Both must
+    exist and resolve to the same colour: without the pair below, `text-primary-foreground`
+    generates no rule at all and text on a pine button silently falls back to near-black.
+  */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  /* Brand tokens. */
+  --color-ink: var(--ink);
+  --color-cream: var(--cream);
+  --color-pine: var(--pine);
+  --color-pine-deep: var(--pine-deep);
+  --color-clay: var(--clay);
+  --color-moss: var(--moss);
+  --color-paper: var(--paper);
+  --color-rule: var(--rule);
+
   --shadow-center: 0 0 12px -2px rgb(0 0 0 / 0.05);
+  --shadow-card: 0 1px 0 rgba(0, 0, 0, 0.02), 0 20px 60px -30px rgba(20, 40, 30, 0.15);
   --animate-pulse-fast: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+:root {
+  --radius: 0.5rem;
+
+  --cream: oklch(0.972 0.012 90);
+  --paper: oklch(0.955 0.014 88);
+  --ink: oklch(0.185 0.018 160);
+  --pine: oklch(0.36 0.055 155);
+  --pine-deep: oklch(0.24 0.04 158);
+  --clay: oklch(0.68 0.135 42);
+  --moss: oklch(0.78 0.09 130);
+  --rule: oklch(0.86 0.015 90);
+
+  --background: var(--cream);
+  --foreground: var(--ink);
+  --card: oklch(0.995 0.006 90);
+  --card-foreground: var(--ink);
+  --muted: var(--paper);
+  --muted-foreground: oklch(0.42 0.02 160);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--pine);
+
+  /* Foreground colours for filled surfaces. Cream on pine and on clay; ink on paper. */
+  --primary-foreground: var(--cream);
+  --secondary-foreground: var(--ink);
+  --accent-foreground: var(--cream);
+  --destructive: oklch(0.55 0.19 27);
+  --destructive-foreground: var(--cream);
+}
+
 @plugin "daisyui" {
-  themes:
-    light,
-    dark --prefersdark;
+  themes: light --default;
 }
 
 @plugin "daisyui/theme" {
   name: "light";
+  color-scheme: light;
 
-  --color-primary: #93bbfb;
-  --color-primary-content: #212638;
-  --color-secondary: #dae8ff;
-  --color-secondary-content: #212638;
-  --color-accent: #93bbfb;
-  --color-accent-content: #212638;
-  --color-neutral: #212638;
-  --color-neutral-content: #ffffff;
-  --color-base-100: #ffffff;
-  --color-base-200: #f4f8ff;
-  --color-base-300: #dae8ff;
-  --color-base-content: #212638;
-  --color-info: #93bbfb;
-  --color-success: #34eeb6;
-  --color-warning: #ffcf72;
-  --color-error: #ff8863;
+  --color-base-100: oklch(0.995 0.006 90);
+  --color-base-200: oklch(0.972 0.012 90);
+  --color-base-300: oklch(0.955 0.014 88);
+  --color-base-content: oklch(0.185 0.018 160);
 
-  --radius-field: 0rem;
-  --radius-box: 0rem;
-  --radius-selector: 0rem;
+  --color-primary: oklch(0.36 0.055 155);
+  --color-primary-content: oklch(0.972 0.012 90);
+  --color-secondary: oklch(0.955 0.014 88);
+  --color-secondary-content: oklch(0.185 0.018 160);
+  --color-accent: oklch(0.68 0.135 42);
+  --color-accent-content: oklch(0.972 0.012 90);
+  --color-neutral: oklch(0.24 0.04 158);
+  --color-neutral-content: oklch(0.972 0.012 90);
+
+  --color-info: oklch(0.36 0.055 155);
+  --color-info-content: oklch(0.972 0.012 90);
+  --color-success: oklch(0.78 0.09 130);
+  --color-success-content: oklch(0.185 0.018 160);
+  --color-warning: oklch(0.68 0.135 42);
+  --color-warning-content: oklch(0.972 0.012 90);
+  --color-error: oklch(0.55 0.19 27);
+  --color-error-content: oklch(0.972 0.012 90);
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
 
   --tt-tailw: 6px;
 }
 
-@plugin "daisyui/theme" {
-  name: "dark";
-
-  --color-primary: #212638;
-  --color-primary-content: #f9fbff;
-  --color-secondary: #323f61;
-  --color-secondary-content: #f9fbff;
-  --color-accent: #4969a6;
-  --color-accent-content: #f9fbff;
-  --color-neutral: #f9fbff;
-  --color-neutral-content: #385183;
-  --color-base-100: #385183;
-  --color-base-200: #2a3655;
-  --color-base-300: #212638;
-  --color-base-content: #f9fbff;
-  --color-info: #385183;
-  --color-success: #34eeb6;
-  --color-warning: #ffcf72;
-  --color-error: #ff8863;
-
-  --radius-field: 0rem;
-  --radius-box: 0rem;
-  --radius-selector: 0rem;
-
-  --tt-tailw: 6px;
-  --tt-bg: var(--color-primary);
-}
-
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
   *,
   ::after,
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: var(--color-border);
   }
 
-  p {
-    margin: 1rem 0;
+  html,
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
   }
 
   body {
@@ -97,14 +156,44 @@
   h2,
   h3,
   h4 {
-    margin-bottom: 0.5rem;
-    line-height: 1;
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+  }
+
+  ::selection {
+    background: var(--pine);
+    color: var(--cream);
   }
 }
 
-:root,
-[data-theme] {
-  background: var(--color-base-200);
+@utility container-page {
+  margin-inline: auto;
+  max-width: 1200px;
+  padding-inline: 1.5rem;
+}
+
+@utility hairline {
+  border-top: 1px solid var(--rule);
+}
+
+@utility grain {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .btn {
