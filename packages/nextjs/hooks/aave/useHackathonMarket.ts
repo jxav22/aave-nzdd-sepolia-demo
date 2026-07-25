@@ -25,7 +25,7 @@ export type ReserveSummary = {
 
   /** Oracle price in the market's base currency (8 decimals). */
   oraclePrice: bigint;
-  /** A real Chainlink feed, or a constant mock aggregator. */
+  /** Fixed NZD mock / settable aggregator, or a live Chainlink feed. */
   priceFeedKind: "chainlink" | "mock";
   priceFeedDescription: string;
 
@@ -68,12 +68,13 @@ const ASSET_NAMES: Record<HackathonAssetSymbol, string> = {
 
 /**
  * Feeds are identified by address, not guessed. `hackathon-market.json` records the
- * aggregator each reserve was listed with; only dNZD is a constant mock.
+ * aggregator each reserve was listed with. All three are NZD-denominated mocks;
+ * wETH/wBTC use SettableAggregators so demos can shock prices.
  */
 const PRICE_FEEDS: Record<HackathonAssetSymbol, { kind: "chainlink" | "mock"; description: string }> = {
-  dNZD: { kind: "mock", description: "Fixed 1.00" },
-  wETH: { kind: "chainlink", description: "Chainlink ETH / USD" },
-  wBTC: { kind: "chainlink", description: "Chainlink BTC / USD" },
+  dNZD: { kind: "mock", description: "Fixed NZ$1.00" },
+  wETH: { kind: "mock", description: "Fixed NZ$3,090 (settable)" },
+  wBTC: { kind: "mock", description: "Fixed NZ$106,526 (settable)" },
 };
 
 const ORDER: HackathonAssetSymbol[] = ["dNZD", "wETH", "wBTC"];

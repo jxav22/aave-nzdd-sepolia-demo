@@ -51,7 +51,7 @@ A **NZD-denominated savings & lending prototype** for New Zealand users, demonst
 - **Primary path:** private Aave V3 hackathon market with **wETH, wBTC, dNZD** (`/mnzd`).
 - **Reference path:** official Aave V3 Sepolia **EURS** (`/aave`) — hidden from nav.
 - Do **not** pitch the private market as governance-listed.
-- Oracles: **wETH / wBTC = live Chainlink Sepolia**; **dNZD = $1 mock** (still USD-referenced — §2).
+- Oracles: **wETH / wBTC = fixed NZD SettableAggregators**; **dNZD = NZ$1 mock**.
 
 ---
 
@@ -66,30 +66,21 @@ Highest-priority pricing defect that remains after the market redeploy.
 | `AaveOracle` | `0x809779d09cB0B9F85D191761Ef4a0a0076eED429` | `hackathon-market.json` / HANDOVER |
 | Base unit | `1e8` (8 decimals), `BASE_CURRENCY = address(0)` | Aave USD convention |
 | `getAssetPrice(dNZD)` | `1.00` — **mock**, constant | HANDOVER §2 |
-| `getAssetPrice(wETH)` | Live Chainlink Sepolia **ETH/USD** (`0x694AA176…25306`) | HANDOVER §2 |
-| `getAssetPrice(wBTC)` | Live Chainlink Sepolia **BTC/USD** (`0x1b44F351…51Ee43`) | HANDOVER §2 |
+| `getAssetPrice(wETH)` | Fixed NZD mock **NZ$3,090** (`SettableAggregator`) | `HackathonFixedNzddPrices` / update script |
+| `getAssetPrice(wBTC)` | Fixed NZD mock **NZ$106,526** (`SettableAggregator`) | same |
 
 Crypto feeds move on their own. Demo scripts must not assume fixed ETH/BTC prices.
 
-### 2.2 Model in force: USD reference, dNZD mispriced as US$1
+### 2.2 Model in force: NZD reference via fixed mocks
 
-- Verified reference currency: **USD** (Chainlink ETH/USD and BTC/USD).
-- dNZD is priced at `1e8` = **US$1.00**, but is meant to represent **NZ$1**.
-- Correct dNZD price under this model ≈ **NZD/USD × 1e8 ≈ `0.60e8`**.
+- Target reference currency: **NZD** (fixed settable aggregators for wETH/wBTC; dNZD at NZ$1).
+- Prices: wETH **NZ$3,090**, wBTC **NZ$106,526**, dNZD **NZ$1.00** (`HackathonFixedNzddPrices`).
+- On-chain application: pool admin runs `UpdateHackathonWethWbtcOracles` in `aave-v3-origin`.
 
-Same-asset dNZD → dNZD is unaffected (price cancels). Cross-asset borrow capacity against crypto is **understated by ~40%**.
+### 2.3 Remediation status
 
-UI label in `AaveMarketPanel.tsx`: **"Available to borrow (USD base)"** — accurate for the reference currency, awkward for an NZD product.
-
-### 2.3 Remediation (needs admin key + sibling repo)
-
-Both options: `AaveOracle.setAssetSources` from Pool Admin (see HANDOVER §4.2).
-
-| | **Fix 1 — stay in USD** | **Fix 2 — redenominate to NZD (recommended)** |
-| :--- | :--- | :--- |
-| Action | New mock feed for dNZD ≈ `0.60e8` | Wrap/adapt Chainlink feeds ÷ NZD/USD (or NZD-priced mocks) |
-| UI label | Keep "USD base" | Change to "NZD base" |
-| Narrative | NZD product reporting in USD | Full account view in NZD |
+**Fix 2 (redenominate to NZD)** is live on Sepolia. Feed addresses are in
+`hackathon-market.json` (`0xC3119eB4…A3ac` / `0xD8C1fB24…a244`).
 
 ---
 

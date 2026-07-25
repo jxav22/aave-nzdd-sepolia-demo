@@ -68,7 +68,7 @@ AAVE_E2E=1 E2E_PRIVATE_KEY=0x… yarn aave:e2e
 
 As of the last live reconciliation ([HANDOVER §2](docs/HANDOVER.md#2-verified-live-state)):
 
-- **wETH / wBTC** use live Chainlink Sepolia feeds; **dNZD** is a constant $1 mock (USD-referenced — see HANDOVER §4.2).
+- **wETH / wBTC** use fixed NZD settable mocks (NZ$3,090 / NZ$106,526); **dNZD** is a constant NZ$1 mock.
 - Crypto collateral has been supplied by the admin; **dNZD pool liquidity was 0**, so borrows revert until someone supplies dNZD.
 - Minting dNZD / wBTC is **owner-only**.
 

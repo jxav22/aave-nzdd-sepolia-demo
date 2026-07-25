@@ -17,8 +17,8 @@ export const METHODOLOGY_NOTE =
 
 export const ORACLE_DIVERGENCE_NOTE =
   "Every figure here is quoted in the market's base currency, in which one dNZD is valued at exactly one unit. " +
-  "wETH is priced by the market's Chainlink feed, and that oracle price is what decides borrowing capacity and " +
-  "liquidation. The Binance figure is the live exchange price, shown for comparison only; the market does not " +
+  "wETH is priced by the market's fixed NZD oracle, and that oracle price is what decides borrowing capacity and " +
+  "liquidation. The Binance figure is the live exchange price in USD, shown for comparison only; the market does not " +
   "use it.";
 
 export const SOURCES = {

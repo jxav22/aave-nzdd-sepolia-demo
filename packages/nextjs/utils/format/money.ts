@@ -10,11 +10,9 @@ import { AAVE_BASE_CURRENCY_DECIMALS } from "~~/utils/aave/amount";
  * carry the same NZ$ label. Nothing here converts between currencies, because there is only
  * one to convert between.
  *
- * The oracle reports collateral prices through Chainlink feeds quoted against the US dollar,
- * and the market treats those figures as base units without applying an NZD/USD rate. The
- * numbers are therefore the raw oracle figures, presented in the market's own unit. Every
- * comparison the protocol makes uses that same unit, so borrowing power, health factors and
- * liquidation thresholds are all internally consistent.
+ * Collateral oracles are fixed NZD mocks (wETH NZ$3,090, wBTC NZ$106,526), derived from a
+ * USD snapshot ÷ NZD/USD ≈ 0.60. The numbers the UI prints are those oracle figures under
+ * the NZ$ label. Every comparison the protocol makes uses that same unit.
  *
  * `BASE_CURRENCY` is the single switch. Point it at a different currency and every aggregate
  * figure in the product follows, with no other file to change.

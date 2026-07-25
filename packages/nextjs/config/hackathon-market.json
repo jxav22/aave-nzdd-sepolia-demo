@@ -25,7 +25,7 @@
       "underlying": "0xA9e6db07425b1Abba96F43C7923988f100d2B508",
       "aToken": "0xF27D136E94e07f1C52067f717B9F07202aE8c6C4",
       "variableDebtToken": "0xC73dA70cDB2B6916f92EDC2aCF52A093972D47a6",
-      "priceFeed": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+      "priceFeed": "0xC3119eB49895975b15f79b65DF0b51927EaFA3ac",
       "mintable": false,
       "acquisition": "wrapNative"
     },
@@ -35,7 +35,7 @@
       "underlying": "0x82Ae40412Cc3C46309413155b4dc903d06494a12",
       "aToken": "0x10C665257aFfecee397A86d3DB0569be256e5843",
       "variableDebtToken": "0xb340f057F2AB01Fa74980207D734b850A0BC45E4",
-      "priceFeed": "0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43",
+      "priceFeed": "0xD8C1fB244182367124c09812F2cAbe0Aa69da244",
       "mintable": true,
       "acquisition": "ownerMint"
     }
@@ -48,5 +48,5 @@
   "aToken": "0x1A6468598646f4f17F3E84ffEaD2F292830A7335",
   "variableDebtToken": "0xC805Fbac842BAdB6992B89B3249898d833b6858d",
   "priceFeed": "0x8EBF44cb2d73Bc7c96ccaCE3790c7eB8F2aa424C",
-  "notes": "Hackathon multi-asset market: dNZD (demo NZD stable, $1 mock), wETH (wrap ETH, Chainlink Sepolia ETH/USD), mintable wBTC (Chainlink Sepolia BTC/USD). Not production."
+  "notes": "Hackathon multi-asset market: dNZD NZ$1 mock; wETH/wBTC fixed NZD SettableAggregators (NZ$3,090 / NZ$106,526) at 0xC3119eB4…A3ac / 0xD8C1fB24…a244 (setAssetSources tx 0x9a005197…). Not production."
 }

@@ -31,9 +31,9 @@ The official Aave Sepolia EURS UI at `/aave` is **hidden from nav** (route kept 
 
 | Asset | Decimals | Underlying | Acquisition | Oracle |
 |-------|----------|------------|-------------|--------|
-| dNZD | 6 | `0x9c6ed608…9416F` | Owner `mint` | Mock $1 |
-| wETH | 18 | `0xA9e6db07…2B508` | Wrap Sepolia ETH / gateway | Chainlink ETH/USD |
-| wBTC | 8 | `0x82Ae4041…94a12` | Owner `mint` | Chainlink BTC/USD |
+| dNZD | 6 | `0x9c6ed608…9416F` | Owner `mint` | Fixed NZ$1.00 mock |
+| wETH | 18 | `0xA9e6db07…2B508` | Wrap Sepolia ETH / gateway | Fixed NZ$3,090 (`0xC3119eB4…A3ac`) |
+| wBTC | 8 | `0x82Ae4041…94a12` | Owner `mint` | Fixed NZ$106,526 (`0xD8C1fB24…a244`) |
 
 Full aToken / debt / feed addresses: `hackathon-market.json`. Reserve params (all three): LTV 82.5%, LT 86%, liq. bonus 5%, RF 10%, uncapped.
 
@@ -47,7 +47,7 @@ Full aToken / debt / feed addresses: `hackathon-market.json`. Reserve params (al
 | wBTC | 8 | Owner-only `mint` (TestnetERC20) |
 | dNZD | 6 | Owner-only `mint` (TestnetERC20) |
 
-Oracles: **dNZD** = constant `$1` mock (USD-referenced — see HANDOVER §4.2); **wETH / wBTC** = live Chainlink Sepolia feeds. Not production NZD FX.
+Oracles: **dNZD** = constant NZ$1 mock; **wETH / wBTC** = fixed NZD `SettableAggregator`s at `0xC3119eB4…A3ac` / `0xD8C1fB24…a244` (NZ$3,090 / NZ$106,526). Owner `0x1bE00A54…F10f` can `setLatestAnswer` for liquidation demos. Not production FX.
 
 ## User flow
 

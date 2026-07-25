@@ -193,7 +193,7 @@ describe("borrow risk report", () => {
 
     expect(oracleDivergence.aaveCollateralPrice.formatted).toBe("1800");
     expect(oracleDivergence.binanceEthPriceUsd).toBe(1856.73);
-    expect(oracleDivergence.note).toMatch(/Chainlink/i);
+    expect(oracleDivergence.note).toMatch(/fixed NZD oracle/i);
     // The note must state that dNZD is valued at one base-currency unit, so a reader can see
     // where the figures' common unit of account comes from, and must mark the exchange price
     // as comparison only so it is not mistaken for what the market prices against.

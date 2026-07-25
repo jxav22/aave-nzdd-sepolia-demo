@@ -73,10 +73,10 @@ by `BPS²` and divided exactly once, so per-leg truncation cannot compound.
 
 ### Why absolute oracle prices do not skew the stress table
 
-This demo market prices wETH via live Chainlink Sepolia ETH/USD and treats one dNZD as one
-base-currency unit ($1 mock, USD-referenced). Absolute levels can still diverge from
-mainnet ETH or real NZD. That does not matter for the stress table, because with wETH as
-the only shockable collateral the price level cancels out:
+This demo market prices wETH via a fixed NZD oracle (NZ$3,090) and treats one dNZD as one
+base-currency unit (NZ$1 mock). Absolute levels can still diverge from mainnet ETH or live
+FX. That does not matter for the stress table, because with wETH as the only shockable
+collateral the price level cancels out:
 
 ```
 HF(x) = C·(1+x)·LT / D = HF₀ × (1 + x)

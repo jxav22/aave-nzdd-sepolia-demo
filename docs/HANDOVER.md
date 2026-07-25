@@ -4,7 +4,7 @@
 **Written:** 25 Jul 2026, reconciled against live Sepolia reads at block **11,346,539**.
 
 You are inheriting a **working technical prototype**, not a product. The hard, risky part —
-a real Aave V3 market denominated in a NZD-labelled asset, with live Chainlink price feeds
+a real Aave V3 market denominated in a NZD-labelled asset, with fixed NZD oracle prices
 and a deterministic risk engine on top — is **done and running on Sepolia**. What does not
 exist is a product: no consumer UI, no onboarding, no yield/APY surface, no analytics, and
 no indexed history.
@@ -93,8 +93,8 @@ caps both `0` (uncapped)**.
 | Token total supply | 2,000,000 | 1.5 | 100,100 |
 | **Supplied to pool (aToken)** | **0** | **1** | **100** |
 | Borrowed (variable debt) | 0 | 0 | 0 |
-| Oracle price (8dp base) | **1.00** | **1,853.80** | **63,915.57** |
-| Price feed | `0x8EBF44cb…a424C` — **mock**, constant | `0x694AA176…25306` — **real Chainlink `ETH / USD`** | `0x1b44F351…51Ee43` — **real Chainlink `BTC / USD`** |
+| Oracle price (8dp base) | **1.00** | **3,090** | **106,526** |
+| Price feed | `0x8EBF44cb…a424C` — **mock**, constant NZ$1 | `0xC3119eB4…A3ac` — fixed NZD `SettableAggregator` (NZ$3,090) | `0xD8C1fB24…a244` — fixed NZD `SettableAggregator` (NZ$106,526) |
 | How to get it | owner `mint` | wrap Sepolia ETH via this market's own WETH9 | owner `mint` |
 
 ### The admin wallet's position
@@ -107,18 +107,17 @@ caps both `0` (uncapped)**.
 | wETH | 0.5 | 1 |
 | wBTC | 0 | 100 |
 
-So roughly **US$6.39M of collateral is posted** (1 wETH ≈ $1,854 plus 100 wBTC ≈ $6.39M) and
-**zero dNZD is available to borrow**.
+So roughly **NZ$10.7M of collateral is posted** once fixed NZD oracles are live (1 wETH ≈
+NZ$3,090 plus 100 wBTC ≈ NZ$10.65M) and **zero dNZD is available to borrow**.
 
 ### What this means
 
-1. **The crypto oracles are real and live.** wETH reads $1,853.80 from Chainlink while Binance
-   independently reports ETH at $1,851.52 — a 0.12% gap. This is a genuine improvement over the
-   market described in `BUILD_PLAN.md`, which used constant mock feeds at $1,800/$27,000. Your
-   risk scenarios are now coherent with what the protocol actually prices.
-2. **Prices now move on their own.** Real feeds drift, so health factors change between page
-   loads and a scripted demo can behave differently each run. Design for it.
-3. **dNZD is still a constant $1 mock**, and that is the remaining pricing defect (§4.2).
+1. **Collateral oracles are fixed NZD mocks** (wETH NZ$3,090, wBTC NZ$106,526), derived from
+   a USD snapshot ÷ NZD/USD ≈ 0.60. Live on Sepolia after
+   `UpdateHackathonWethWbtcOracles` (`setAssetSources` tx `0x9a005197…`).
+2. **Prices are settable for demos.** Call `setLatestAnswer` on the wETH/wBTC
+   `SettableAggregator` (owner `0x1bE00A54…F10f`) to shock health factors.
+3. **dNZD stays at NZ$1.00**, which is correct once collateral is NZD-denominated.
 4. **Nothing has ever been borrowed on this market.** Total debt across all three reserves is
    zero. Every borrow-side code path is written but unproven against this pool.
 
@@ -172,39 +171,14 @@ have.
 
 Whoever holds that private key is a hard dependency. Confirm that before you plan anything.
 
-### 4.2 dNZD is priced at US$1, not NZ$1
+### 4.2 Collateral oracles are fixed NZD (done)
 
-The oracle base unit is 8-decimal USD (wETH and wBTC are quoted in USD by real Chainlink
-feeds). dNZD's mock feed returns `1.00`, which the protocol therefore reads as **US$1** — but
-dNZD is meant to represent **NZ$1**.
+Live on Sepolia: wETH `0xC3119eB4…A3ac` = NZ$3,090, wBTC `0xD8C1fB24…a244` = NZ$106,526,
+dNZD stays NZ$1. Addresses are in `hackathon-market.json`.
 
-Every cross-asset number is consequently wrong in the product's own unit. At a NZD/USD rate
-around 0.60, borrowing capacity against crypto collateral is **understated by roughly 40%**:
-1 wETH × 82.5% LTV shows as 1,529 dNZD when the NZD-correct answer is about 2,549.
+Demo price shock: `SettableAggregator.setLatestAnswer` as owner `0x1bE00A54…F10f`.
 
-Two ways out, both requiring the admin key and an `AaveOracle.setAssetSources` call from the
-sibling repo:
-
-- **Re-price dNZD to ~0.60e8.** One mock aggregator deploy plus one admin call. The account
-  view stays USD-denominated — an NZD product reporting in USD.
-- **Re-denominate the whole market into NZD.** Wrap the Chainlink ETH/USD and BTC/USD feeds in
-  adapters that divide by a NZD/USD rate. More work, and you lose the "it's a real Chainlink
-  feed" talking point unless the adapter is clean, but the entire account view then reads in
-  NZD, which is the actual product.
-
-Note that same-asset flows (supply dNZD, borrow dNZD) are unaffected — the price cancels on
-both sides.
-
-**Frontend consequence, independent of which fix:** `AaveMarketPanel.tsx` line 93 hardcodes
-the label `Available to borrow (USD base)`. That is the only string in the codebase tied to
-the reference currency.
-
-```93:95:packages/nextjs/components/aave/AaveMarketPanel.tsx
-          <div className="opacity-70">Available to borrow (USD base)</div>
-          <div className="font-mono text-lg">{isReading ? "…" : formatAaveBaseAmount(availableBorrowsBase)}</div>
-        </div>
-```
-
+Same-asset flows (supply dNZD, borrow dNZD) were already unaffected — the price cancels.
 ### 4.3 There is no way for a user to obtain dNZD
 
 `mint` is `onlyOwner`. A visitor cannot get test NZD without someone manually minting to
@@ -214,9 +188,9 @@ see `BUILD_PLAN.md` §13, still accurate on this point), or pre-minting to a kno
 
 ### 4.4 100 wBTC of collateral looks like test data, because it is
 
-The admin has US$6.39M of wBTC posted. Any "available to borrow" figure derived from it is
-absurd on its face. Before showing this to anyone, either withdraw most of the wBTC or demo
-from a second wallet with a realistic position.
+The admin has ~NZ$10.7M of wBTC posted once fixed NZD oracles are live. Any "available to
+borrow" figure derived from it is absurd on its face. Before showing this to anyone, either
+withdraw most of the wBTC or demo from a second wallet with a realistic position.
 
 ---
 
