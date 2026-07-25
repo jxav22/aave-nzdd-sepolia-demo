@@ -20,7 +20,7 @@ import { getParsedError, notification } from "~~/utils/scaffold-eth";
  *
  * Privy handles sign-in and provisions an embedded wallet, so someone can hold a position
  * without ever installing one. The signed-in surface leads with the identity they recognise
- * — their email — and keeps the address available but secondary.
+ * their email, and keeps the address available but secondary.
  *
  * Users with a Privy-created embedded wallet can export the private key via Privy's
  * cross-origin modal (escape hatch); this app never sees the key.
@@ -79,7 +79,7 @@ export const PrivyAuthButton = () => {
     if (!embeddedWalletAddress || !isAddress(embeddedWalletAddress)) return;
     setIsExporting(true);
     try {
-      // Privy's promise resolves when the user exits their modal — close our confirm first.
+      // Privy's promise resolves when the user exits their modal, so close our confirm first.
       setExportConfirmOpen(false);
       await exportWallet({ address: getAddress(embeddedWalletAddress) });
     } catch (e) {
@@ -96,7 +96,7 @@ export const PrivyAuthButton = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Clipboard permission denied — the address is on screen to copy manually.
+      // Clipboard permission denied. The address is on screen to copy manually.
     }
   };
 
@@ -222,7 +222,7 @@ export const PrivyAuthButton = () => {
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
               Continue only if you are moving this wallet to another client (for example MetaMask). The key is shown in
-              a secure Privy window — this app never sees it.
+              a secure Privy window. This app never sees it.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button

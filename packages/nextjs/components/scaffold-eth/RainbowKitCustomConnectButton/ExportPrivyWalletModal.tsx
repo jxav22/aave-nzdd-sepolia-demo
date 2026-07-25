@@ -22,7 +22,7 @@ export const ExportPrivyWalletModal = ({ onConfirm }: ExportPrivyWalletModalProp
     setIsExporting(true);
     try {
       // Privy's exportWallet promise resolves when the user exits their modal, so hand off
-      // immediately — keeping our warning open underneath would stack two overlays.
+      // immediately, and keeping our warning open underneath would stack two overlays.
       closeModal();
       await onConfirm();
     } catch (e) {
@@ -51,7 +51,7 @@ export const ExportPrivyWalletModal = ({ onConfirm }: ExportPrivyWalletModalProp
             </div>
             <p className="mt-3">
               Continue only if you are moving this wallet to another client (for example MetaMask). The key is shown in
-              a secure Privy window — this app never sees it.
+              a secure Privy window. This app never sees it.
             </p>
             <div className="flex gap-2 mt-4">
               <label htmlFor={EXPORT_PRIVY_WALLET_MODAL_ID} className="btn btn-ghost">
