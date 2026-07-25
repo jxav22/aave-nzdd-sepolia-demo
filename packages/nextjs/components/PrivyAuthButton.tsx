@@ -225,7 +225,7 @@ export const PrivyAuthButton = () => {
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">
                   Continue only if you are moving this wallet to another client (for example MetaMask). The key is shown
-                  in a secure Privy window — this app never sees it.
+                  in a secure Privy window. This app never sees it.
                 </p>
                 <div className="mt-5 flex justify-end gap-2">
                   <button

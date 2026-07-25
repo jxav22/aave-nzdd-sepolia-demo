@@ -202,7 +202,7 @@ const TwoPaths = () => {
           </h2>
           <p className="mt-5 max-w-md text-[var(--cream)]/75">
             Deposit your ETH or Bitcoin as collateral and borrow New Zealand dollars against it. You are not selling.
-            the asset stays yours, and so does any movement in its price. Repay whenever you like and take the
+            The asset stays yours, and so does any movement in its price. Repay whenever you like and take the
             collateral back.
           </p>
         </div>

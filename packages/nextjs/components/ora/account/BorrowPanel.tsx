@@ -29,11 +29,11 @@ import { formatBase, formatNzd, formatPercent, formatToken, formatTokenBare } fr
  * Borrowing New Zealand dollars against ETH or Bitcoin collateral.
  *
  * Two ordered steps on one surface: deposit collateral, then borrow against it. Allowing the
- * market to move tokens and depositing / repaying are also separate confirmations — chaining
- * them breaks embedded-wallet signing and can race the allowance refresh.
+ * market to move tokens and depositing / repaying are also separate confirmations, because
+ * chaining them breaks embedded-wallet signing and can race the allowance refresh.
  *
  * The consequences of borrowing against a volatile asset are stated in plain words directly
- * above the borrow action and are never collapsed — someone new to this has to be able to see,
+ * above the borrow action and are never collapsed. Someone new to this has to be able to see,
  * before committing, that a large enough fall costs them the collateral.
  *
  * Borrowing capacity and available liquidity are shown as separate figures throughout. They are

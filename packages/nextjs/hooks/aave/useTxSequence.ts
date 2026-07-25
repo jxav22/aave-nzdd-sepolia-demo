@@ -7,8 +7,8 @@ import { isUserRejection } from "~~/utils/tx/rejection";
 /**
  * Runs one or more transactions as a single user action, exposing per-step status.
  *
- * Approve and the follow-on write (supply / repay) must stay separate user clicks — chaining
- * them here races the allowance refresh and breaks embedded-wallet signing. Use this for a
+ * Approve and the follow-on write (supply / repay) must stay separate user clicks, because
+ * chaining them races the allowance refresh and breaks embedded-wallet signing. Use this for a
  * single write, or for steps that do not depend on a just-updated allowance.
  *
  * Each step's `run` is an existing tested write path, nothing here talks to a contract
@@ -24,7 +24,7 @@ export type TxStepStatus = "pending" | "active" | "confirmed" | "failed" | "skip
 export type TxStepSpec = {
   id: string;
   label: string;
-  /** Return false to skip — e.g. an optional cleanup step. Do not use to chain approve-then-supply. */
+  /** Return false to skip, e.g. an optional cleanup step. Do not use to chain approve-then-supply. */
   shouldRun?: () => boolean;
   run: () => Promise<unknown>;
 };

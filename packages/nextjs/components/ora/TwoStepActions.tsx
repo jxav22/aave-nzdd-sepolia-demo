@@ -5,7 +5,7 @@ import { Eyebrow } from "~~/components/ora/primitives";
 
 /**
  * Approve and the follow-on write are two confirmations. This is the UI rule for that:
- * always render them as Step 1 and Step 2 — never a single combined control.
+ * always render them as Step 1 and Step 2, never a single combined control.
  */
 
 export type TwoStepSlot = {
