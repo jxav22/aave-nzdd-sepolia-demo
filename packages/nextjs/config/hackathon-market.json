@@ -1,41 +1,41 @@
 {
   "chainId": 11155111,
   "marketId": "Web3NZ Hackathon dNZD Market",
-  "pool": "0xB0ce61547bdd38139f7F764E7171Cd048323CC69",
-  "poolAddressesProvider": "0x2950597Bd526eB285b772f06654924bFa0b817f8",
-  "aaveOracle": "0x79054dbB96Ca2d091e3B157970D8A2384e1473Ef",
-  "protocolDataProvider": "0xb5565F196F185c74370FdE81b2422d7D5d2b2bF4",
-  "aclManager": "0x481230241FE711c54D3DB2172E95B66a08234098",
-  "configEngine": "0x6aFCfDf407acAE43100D2786f0383cFaB47eA1aE",
-  "wrappedTokenGateway": "0x768eCE1ec66F5107A9A5a8688C022050e0d6Eb3D",
+  "pool": "0xe1556e1f65Aa99682e96Ad3de866f446D2A1275e",
+  "poolAddressesProvider": "0x4e8a83e4061a9A3EC26f575f918C1CDb8775291b",
+  "aaveOracle": "0x809779d09cB0B9F85D191761Ef4a0a0076eED429",
+  "protocolDataProvider": "0x59d373bfc3E4c7c0813eE81566Fcf91C37f55D35",
+  "aclManager": "0xaed9938445b4fa4E9cA72b96C7B977d08298a971",
+  "configEngine": "0x4B6911A24aD240986fc5fEC09D1bbb3a18F1cCE2",
+  "wrappedTokenGateway": "0x2Ac0b0B36CD831d71D315AF868429C312d1C5B52",
   "assets": [
     {
       "symbol": "dNZD",
       "decimals": 6,
-      "underlying": "0xDf40C406e03a0fA6D4bE26F96Ca3A7E6fE9baeeC",
-      "aToken": "0xA4c4E7eb3Cb6fc54CBa7b0B08549143bB7cF7DB8",
-      "variableDebtToken": "0x0B27c6229F90ed3BA9Af911cd607198924458E6A",
-      "priceFeed": "0x9956e5C7994bF0d0343Cdab4025985D6B8053F44",
+      "underlying": "0x9c6ed608C36D8a483377867b61452765A669416F",
+      "aToken": "0x1A6468598646f4f17F3E84ffEaD2F292830A7335",
+      "variableDebtToken": "0xC805Fbac842BAdB6992B89B3249898d833b6858d",
+      "priceFeed": "0x8EBF44cb2d73Bc7c96ccaCE3790c7eB8F2aa424C",
       "mintable": true,
       "acquisition": "ownerMint"
     },
     {
       "symbol": "wETH",
       "decimals": 18,
-      "underlying": "0xbADeCefCB97D4d421F1B7FBe29A7492b3384b63D",
-      "aToken": "0xBA88c1acE2199F6e41CFBaB7425C4c1DB6309710",
-      "variableDebtToken": "0x08240AE33A37428cAc5B609EC9a6e1830DB260Ee",
-      "priceFeed": "0xDF13765e737660d245E7F5F3D7986c049a15B5AB",
+      "underlying": "0xA9e6db07425b1Abba96F43C7923988f100d2B508",
+      "aToken": "0xF27D136E94e07f1C52067f717B9F07202aE8c6C4",
+      "variableDebtToken": "0xC73dA70cDB2B6916f92EDC2aCF52A093972D47a6",
+      "priceFeed": "0xEE5670CE0C684398180f5A137552AA53bF6d916f",
       "mintable": false,
       "acquisition": "wrapNative"
     },
     {
       "symbol": "wBTC",
       "decimals": 8,
-      "underlying": "0xf30C795eC8A1689e33B91B7A8E2840159A1Fa4Fa",
-      "aToken": "0xa11eEF86434b4D6a043C7DF41202573EED5442E5",
-      "variableDebtToken": "0x4DE556BC25c23ACf4e7e854dA636487E8798837b",
-      "priceFeed": "0x5e289739cc6Bd9c0512E2e163D966e38a06f75C6",
+      "underlying": "0x82Ae40412Cc3C46309413155b4dc903d06494a12",
+      "aToken": "0x10C665257aFfecee397A86d3DB0569be256e5843",
+      "variableDebtToken": "0xb340f057F2AB01Fa74980207D734b850A0BC45E4",
+      "priceFeed": "0x6cD16D15ccFE8c2E3165c0a54D9abCCF62c6dAeC",
       "mintable": true,
       "acquisition": "ownerMint"
     }
@@ -43,10 +43,10 @@
   "underlying": {
     "symbol": "dNZD",
     "decimals": 6,
-    "address": "0xDf40C406e03a0fA6D4bE26F96Ca3A7E6fE9baeeC"
+    "address": "0x9c6ed608C36D8a483377867b61452765A669416F"
   },
-  "aToken": "0xA4c4E7eb3Cb6fc54CBa7b0B08549143bB7cF7DB8",
-  "variableDebtToken": "0x0B27c6229F90ed3BA9Af911cd607198924458E6A",
-  "priceFeed": "0x9956e5C7994bF0d0343Cdab4025985D6B8053F44",
+  "aToken": "0x1A6468598646f4f17F3E84ffEaD2F292830A7335",
+  "variableDebtToken": "0xC805Fbac842BAdB6992B89B3249898d833b6858d",
+  "priceFeed": "0x8EBF44cb2d73Bc7c96ccaCE3790c7eB8F2aa424C",
   "notes": "Hackathon multi-asset market: dNZD (demo NZD stable), wETH (wrap ETH), mintable wBTC. Mock oracles. Not production."
 }
