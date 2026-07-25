@@ -10,8 +10,8 @@ When a flow needs an ERC20 `approve` and then a protocol write (`supply`, `repay
 
 1. **Never chain them** in one click or one `useTxSequence.run([...approve, ...action])`. That races allowance refresh and breaks embedded-wallet signing.
 2. **Always represent them as two steps in the UI** — use `TwoStepActions` (`packages/nextjs/components/ora/TwoStepActions.tsx`). Do not collapse into a single button row that only sometimes reveals Approve.
-3. **Step 1** = allow the market to move tokens. **Step 2** = the deposit / repay / other write. Step 2 stays locked until allowance covers the amount.
-4. If allowance already covers the amount, Step 1 shows as done; Step 2 is available. Still keep both steps visible — do not hide the two-step structure.
-5. **Debt-covering approvals need a buffer.** Aave's `repay(maxUint256)` pulls debt at execution after interest accrual. Approve via `repayApprovalAmount(debt, walletBalance)` (debt + small buffer), not the exact debt snapshot. Do not contest Aave's confirmed pull amount — the buffer is allowance headroom only and does not change the `Pool.repay` argument.
+3. **Step 1** = allow the market to move tokens. **Step 2** = the deposit / repay / other write. Step 2 unlocks when allowance covers the *action* amount (typed supply amount, or current debt for repay). Still keep both steps visible — do not hide the two-step structure.
+4. If allowance already covers the action amount, Step 1 shows as done; Step 2 is available.
+5. **Debt-covering approvals need a buffer.** Aave's `repay(maxUint256)` pulls debt at execution after interest accrual. *Approve* via `repayApprovalAmount(debt, walletBalance)` (debt + small buffer), not the exact debt snapshot. Do **not** gate Step-1 “done” on the buffered target — that re-locks as debt (and the buffer) grow. The buffer is allowance headroom only and does not change the `Pool.repay` argument.
 
 Single-signature actions (withdraw, borrow, native ETH supply via gateway) stay one step.

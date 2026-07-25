@@ -9,6 +9,7 @@ import {
   isRepayAllAmount,
   isWithdrawAllAmount,
   parseTokenAmount,
+  repayApprovalAmount,
 } from "./amount";
 import { maxUint256 } from "viem";
 import { describe, expect, it } from "vitest";
@@ -71,6 +72,40 @@ describe("withdraw-all and repay-all amounts", () => {
     expect(isRepayAllAmount(REPAY_ALL_AMOUNT)).toBe(true);
     expect(REPAY_ALL_AMOUNT).toBe(WITHDRAW_ALL_AMOUNT);
     expect(isRepayAllAmount(1n)).toBe(false);
+  });
+});
+
+describe("repayApprovalAmount", () => {
+  it("returns zero when there is no debt", () => {
+    expect(repayApprovalAmount(0n, 1_000_000n)).toBe(0n);
+  });
+
+  it("adds a 2% plus one-unit buffer above debt", () => {
+    const debt = 1_000_000n;
+    // 1_000_000 + 20_000 + 1
+    expect(repayApprovalAmount(debt, debt)).toBe(1_020_001n);
+  });
+
+  it("requests the buffer when the wallet cannot cover debt", () => {
+    const debt = 1_000_000n;
+    expect(repayApprovalAmount(debt, debt / 2n)).toBe(1_020_001n);
+  });
+
+  it("uses wallet surplus as best-effort headroom when below the full buffer", () => {
+    const debt = 1_000_000n;
+    const wallet = 1_010_000n;
+    expect(repayApprovalAmount(debt, wallet)).toBe(wallet);
+  });
+
+  it("caps at the buffered amount when the wallet already covers it", () => {
+    const debt = 1_000_000n;
+    const buffered = 1_020_001n;
+    expect(repayApprovalAmount(debt, 5_000_000n)).toBe(buffered);
+  });
+
+  it("handles dust debt (1 base unit)", () => {
+    // 1 + 0 + 1
+    expect(repayApprovalAmount(1n, 0n)).toBe(2n);
   });
 });
 

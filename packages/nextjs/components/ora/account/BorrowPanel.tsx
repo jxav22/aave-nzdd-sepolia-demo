@@ -218,11 +218,13 @@ export const BorrowPanel = ({
   };
 
   /**
-   * Step 1 done when hook allowance covers the buffered approval amount.
-   * Use nzdActions.state.allowance (single source): approve awaits refetchAllowance there,
-   * so Step 2 unlocks immediately instead of waiting on the positions multicall.
+   * Step 1 done when hook allowance covers current debt.
+   * Approve requests a buffered amount (see repayApprovalAmount) so accrual does not
+   * immediately invalidate readiness; gate on debt itself so a growing buffer target
+   * cannot re-lock Step 2 after a successful approve.
+   * Use nzdActions.state.allowance (single source): approve awaits refetchAllowance there.
    */
-  const repayAllowanceReady = nzdPosition.borrowed > 0n && nzdActions.state.allowance >= repayApprovalRaw;
+  const repayAllowanceReady = nzdPosition.borrowed > 0n && nzdActions.state.allowance >= nzdPosition.borrowed;
 
   const runApproveRepay = async () => {
     const ok = await repaySequence.run([
