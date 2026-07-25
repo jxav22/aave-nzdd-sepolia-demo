@@ -33,18 +33,18 @@ const Hero = () => (
     <div className="grain container-page grid gap-16 pt-16 pb-20 lg:grid-cols-[1.15fr_1fr] lg:pt-24 lg:pb-28">
       <div>
         <Eyebrow>Aotearoa New Zealand</Eyebrow>
-        <h1 className="mt-5 font-display text-[3.25rem] leading-[1.02] tracking-[-0.02em] sm:text-[4.5rem] lg:text-[5.25rem]">
-          Your money,
+        <h1 className="mt-5 font-display text-[3.25rem] leading-[1.02] tracking-[-0.02em] sm:text-[4.5rem] lg:text-[5rem]">
+          Earn on your NZD,
           <br />
-          in your own
+          borrow against
           <br />
-          <em className="text-[var(--pine)]">currency.</em>
+          <em className="text-[var(--pine)]">your crypto.</em>
         </h1>
         <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted-foreground">
-          Nearly every way to earn on-chain is priced in US dollars, so a New Zealander looking for somewhere to put
-          their savings ends up holding a currency position they never asked for. Ora is a lending market denominated in{" "}
-          <span className="text-foreground">New Zealand dollars</span>. Earn on NZD, or borrow NZD against the crypto
-          you already hold.
+          Nearly every way to earn on-chain is priced in US dollars, so a New Zealander putting savings to work ends up
+          holding a currency position they never chose. Ora is denominated in{" "}
+          <span className="text-foreground">New Zealand dollars</span> throughout: what you deposit, what you owe and
+          what you can borrow are all the same currency.
         </p>
         <div className="mt-9 flex flex-wrap items-center gap-3">
           <Link
