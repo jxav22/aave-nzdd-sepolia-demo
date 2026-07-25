@@ -489,6 +489,14 @@ allow `localhost:3000` and the production domain; enable Ethereum embedded walle
 `NEXT_PUBLIC_PRIVY_APP_ID` set, the header uses Privy Sign in (not RainbowKit). Server session is
 `POST/GET/DELETE /api/auth/session` (Privy JWT → iron-session cookie).
 
+**Embedded wallet private key export:** users with a Privy-created Ethereum embedded wallet can
+export via the account dropdown → **Export private key**. That opens a warning, then Privy’s
+cross-origin `exportWallet` modal (key never touches our app origin). No dashboard toggle is
+required — export is enabled by default unless a DENY policy is set. External wallets (e.g.
+MetaMask) do not show this item. Do not add a server-side export path with `PRIVY_APP_SECRET`
+for these client-created wallets. Optional hardening later: enable wallet MFA in Privy Dashboard
+→ User management → MFA.
+
 `NEXT_PUBLIC_PRIVY_APP_ID` is inlined at **build time** — set it on Vercel before
 `yarn vercel:yolo --prod`, not only as a runtime secret after the build.
 

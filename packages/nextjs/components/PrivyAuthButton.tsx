@@ -1,18 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { type WalletWithMetadata, useExportWallet, usePrivy } from "@privy-io/react-auth";
 import { Balance } from "@scaffold-ui/components";
 import { getBlockExplorerAddressLink } from "@scaffold-ui/hooks";
-import { Address } from "viem";
+import { Address, getAddress, isAddress, isAddressEqual } from "viem";
 import { useAccount } from "wagmi";
 import { AddressInfoDropdown } from "~~/components/scaffold-eth/RainbowKitCustomConnectButton/AddressInfoDropdown";
 import { AddressQRCodeModal } from "~~/components/scaffold-eth/RainbowKitCustomConnectButton/AddressQRCodeModal";
 import { WrongNetworkDropdown } from "~~/components/scaffold-eth/RainbowKitCustomConnectButton/WrongNetworkDropdown";
 import { useNetworkColor, useTargetNetwork } from "~~/hooks/scaffold-eth";
 
+const isPrivyEmbeddedEthereumWallet = (account: { type: string }): account is WalletWithMetadata =>
+  account.type === "wallet" &&
+  "walletClientType" in account &&
+  account.walletClientType === "privy" &&
+  "chainType" in account &&
+  account.chainType === "ethereum" &&
+  "address" in account &&
+  typeof account.address === "string" &&
+  isAddress(account.address);
+
 export const PrivyAuthButton = () => {
   const { ready, authenticated, user, login, logout } = usePrivy();
+  const { exportWallet } = useExportWallet();
   const { address, chain } = useAccount();
   const { targetNetwork } = useTargetNetwork();
   const networkColor = useNetworkColor();
@@ -20,6 +31,22 @@ export const PrivyAuthButton = () => {
 
   const email =
     user?.email?.address ?? user?.google?.email ?? user?.apple?.email ?? user?.twitter?.username ?? undefined;
+
+  const embeddedWalletAddress = user?.linkedAccounts?.find(isPrivyEmbeddedEthereumWallet)?.address;
+
+  const canExportPrivateKey =
+    ready &&
+    authenticated &&
+    typeof address === "string" &&
+    isAddress(address) &&
+    typeof embeddedWalletAddress === "string" &&
+    isAddress(embeddedWalletAddress) &&
+    isAddressEqual(address, embeddedWalletAddress);
+
+  const handleExportPrivateKey = async () => {
+    if (!embeddedWalletAddress || !isAddress(embeddedWalletAddress)) return;
+    await exportWallet({ address: getAddress(embeddedWalletAddress) });
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -71,6 +98,7 @@ export const PrivyAuthButton = () => {
           ensAvatar={undefined}
           blockExplorerAddressLink={blockExplorerAddressLink}
           onDisconnect={handleLogout}
+          onExportPrivateKey={canExportPrivateKey ? handleExportPrivateKey : undefined}
         />
         <AddressQRCodeModal address={address as Address} modalId="qrcode-modal" />
       </div>

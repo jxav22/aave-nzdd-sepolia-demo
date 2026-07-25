@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
+import { EXPORT_PRIVY_WALLET_MODAL_ID, ExportPrivyWalletModal } from "./ExportPrivyWalletModal";
 import { NetworkOptions } from "./NetworkOptions";
-import { getAddress } from "viem";
-import { Address } from "viem";
+import { Address, getAddress } from "viem";
 import { useAccount, useDisconnect } from "wagmi";
 import {
   ArrowLeftOnRectangleIcon,
@@ -29,6 +29,8 @@ type AddressInfoDropdownProps = {
   ensAvatar?: string;
   /** Override wagmi disconnect (e.g. Privy logout + clear server session). */
   onDisconnect?: () => void | Promise<void>;
+  /** When set, shows Privy embedded-wallet private key export (confirm modal, then Privy). */
+  onExportPrivateKey?: () => Promise<void>;
 };
 
 export const AddressInfoDropdown = ({
@@ -37,6 +39,7 @@ export const AddressInfoDropdown = ({
   displayName,
   blockExplorerAddressLink,
   onDisconnect,
+  onExportPrivateKey,
 }: AddressInfoDropdownProps) => {
   const { disconnect } = useDisconnect();
   const { connector } = useAccount();
@@ -124,6 +127,18 @@ export const AddressInfoDropdown = ({
               </label>
             </li>
           ) : null}
+          {onExportPrivateKey ? (
+            <li className={selectingNetwork ? "hidden" : ""}>
+              <label
+                htmlFor={EXPORT_PRIVY_WALLET_MODAL_ID}
+                className="h-8 btn-sm flex gap-3 py-3 text-error"
+                onClick={closeDropdown}
+              >
+                <EyeIcon className="h-6 w-4 ml-2 sm:ml-0" />
+                <span>Export private key</span>
+              </label>
+            </li>
+          ) : null}
           <li className={selectingNetwork ? "hidden" : ""}>
             <button
               className="menu-item text-error h-8 btn-sm flex gap-3 py-3"
@@ -141,6 +156,7 @@ export const AddressInfoDropdown = ({
           </li>
         </ul>
       </details>
+      {onExportPrivateKey ? <ExportPrivyWalletModal onConfirm={onExportPrivateKey} /> : null}
     </>
   );
 };
