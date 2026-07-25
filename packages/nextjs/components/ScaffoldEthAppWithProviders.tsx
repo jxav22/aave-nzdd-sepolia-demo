@@ -11,6 +11,7 @@ import { Toaster } from "react-hot-toast";
 import { WagmiProvider } from "wagmi";
 import { Footer } from "~~/components/Footer";
 import { Header } from "~~/components/Header";
+import { ChatWidget } from "~~/components/ora/ChatWidget";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
 import { AuthSessionSync } from "~~/hooks/useAuthSession";
 import { privyConfig } from "~~/services/web3/privyConfig";
@@ -25,6 +26,7 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
         <main className="relative flex flex-col flex-1">{children}</main>
         <Footer />
       </div>
+      <ChatWidget />
       <Toaster />
     </>
   );

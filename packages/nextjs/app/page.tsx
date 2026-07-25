@@ -122,7 +122,7 @@ const HeroCard = () => {
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
             <span>How much of the pool is lent out</span>
             <span className="tabular font-mono text-foreground">
-              {isLoading ? "—" : formatPercent(nzd?.utilisationPercent ?? 0, 1)}
+              {isLoading ? "-" : formatPercent(nzd?.utilisationPercent ?? 0, 1)}
             </span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
@@ -163,7 +163,7 @@ const TwoPaths = () => {
 
           <div className="mt-8 flex items-baseline gap-3">
             <span className="tabular font-display text-5xl text-[var(--clay)]">
-              {isLoading ? "—" : formatPercent(nzd?.supplyApyPercent ?? 0)}
+              {isLoading ? "-" : formatPercent(nzd?.supplyApyPercent ?? 0)}
             </span>
             <span className="text-sm text-muted-foreground">current rate, variable</span>
           </div>
@@ -201,7 +201,7 @@ const TwoPaths = () => {
             <em className="text-[var(--moss)]">without selling.</em>
           </h2>
           <p className="mt-5 max-w-md text-[var(--cream)]/75">
-            Deposit your ETH or Bitcoin as collateral and borrow New Zealand dollars against it. You are not selling —
+            Deposit your ETH or Bitcoin as collateral and borrow New Zealand dollars against it. You are not selling.
             the asset stays yours, and so does any movement in its price. Repay whenever you like and take the
             collateral back.
           </p>
@@ -214,7 +214,7 @@ const TwoPaths = () => {
                 Borrow up to
               </div>
               <div className="tabular mt-1 font-display text-2xl">
-                {isLoading ? "—" : formatPercent(eth?.maxLtvPercent ?? 0, 0)}
+                {isLoading ? "-" : formatPercent(eth?.maxLtvPercent ?? 0, 0)}
               </div>
             </div>
             <div>
@@ -222,7 +222,7 @@ const TwoPaths = () => {
                 Borrow rate
               </div>
               <div className="tabular mt-1 font-display text-2xl">
-                {isLoading ? "—" : formatPercent(nzd?.borrowApyPercent ?? 0)}
+                {isLoading ? "-" : formatPercent(nzd?.borrowApyPercent ?? 0)}
               </div>
             </div>
             <div>
@@ -233,7 +233,7 @@ const TwoPaths = () => {
 
           <p className="mt-8 text-xs leading-relaxed text-[var(--cream)]/60">
             Borrowing against your crypto is not the same as selling it, so you keep the asset. Whether that has any
-            bearing on your tax position depends on your own circumstances — this is not tax advice, and it is worth
+            bearing on your tax position depends on your own circumstances. This is not tax advice, and it is worth
             speaking to an accountant. If your collateral falls far enough in value, some of it can be sold to repay
             what you owe.
           </p>
@@ -268,7 +268,7 @@ const RiskSection = () => {
           <p className="mt-5 max-w-md text-muted-foreground">
             Borrowing against a volatile asset means a large enough price fall can cost you the collateral. Our stress
             tester takes your actual position, applies declines drawn from how ETH has really moved, and shows where
-            liquidation would begin — before you commit to anything.
+            liquidation would begin, before you commit to anything.
           </p>
           <Link
             href="/market"
@@ -308,7 +308,7 @@ const RiskSection = () => {
           <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
             An illustration, not your position, and not a forecast. The real thing reads your own collateral at its live
             price
-            {eth && eth.oraclePrice > 0n ? ` — ETH is currently ${formatBase(eth.oraclePrice)} — ` : " "}
+            {eth && eth.oraclePrice > 0n ? ` (ETH is currently ${formatBase(eth.oraclePrice)}) ` : " "}
             and shows the decline at which liquidation would begin.
           </p>
         </Card>

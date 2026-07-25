@@ -2,7 +2,7 @@
 
 /**
  * Shared helpers for the public Developer API playground.
- * Client-safe — no server-only imports.
+ * Client-safe, no server-only imports.
  */
 
 export type ApiErrorBody = {
@@ -89,7 +89,7 @@ export function apiErrorMessage(body: unknown, fallback: string): string {
 
 export function formatPrice(value: number | null | undefined): string {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    return "—";
+    return "-";
   }
   if (value >= 1000) {
     return `$${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
@@ -105,7 +105,7 @@ export function formatPrice(value: number | null | undefined): string {
 
 export function formatUsdCompact(value: number | null | undefined): string {
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-    return "—";
+    return "-";
   }
   if (value >= 1_000_000_000) {
     return `$${(value / 1_000_000_000).toFixed(2)}B`;
@@ -127,7 +127,7 @@ export function formatUsdCompact(value: number | null | undefined): string {
 
 export function formatChange(value: number | null | undefined): string {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    return "—";
+    return "-";
   }
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}%`;

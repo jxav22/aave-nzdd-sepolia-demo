@@ -50,7 +50,7 @@ const groupTransactionsByBlock = (items: { block: Block; tx: Transaction }[]): B
 };
 
 // Collects the requested page plus one extra transaction (the cheap "is there a next page?"
-// signal), counting only transactions that pass matchesFilter — so address views paginate over
+// signal), counting only transactions that pass matchesFilter, so address views paginate over
 // the address's own transactions instead of slicing a global page.
 const fetchPageItems = async (
   latestBlock: bigint,

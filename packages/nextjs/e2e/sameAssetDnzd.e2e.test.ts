@@ -1,5 +1,5 @@
 /**
- * Suite A — same-asset dNZD lifecycle on live Sepolia.
+ * Suite A, same-asset dNZD lifecycle on live Sepolia.
  *
  * Opt-in only (excluded from `yarn test:aave`):
  *

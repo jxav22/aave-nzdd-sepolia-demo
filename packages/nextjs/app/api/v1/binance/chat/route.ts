@@ -1,6 +1,6 @@
 /**
- * GET  /api/v1/binance/chat — agent status, its toolset, and starter prompts.
- * POST /api/v1/binance/chat — one chat turn.
+ * GET  /api/v1/binance/chat, agent status, its toolset, and starter prompts.
+ * POST /api/v1/binance/chat, one chat turn.
  *
  * The agent's tools are the other operations of this API, called over HTTP (see
  * `services/agent/apiTools.ts`). Those need no key; the dialogue needs OPENAI_API_KEY.

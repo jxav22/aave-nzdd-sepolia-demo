@@ -29,7 +29,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata = getMetadata({
-  title: "Ora — Earn on New Zealand dollars, or borrow against your crypto",
+  title: "Ora: Earn on New Zealand dollars, or borrow against your crypto",
   description:
     "A New Zealand dollar lending market. Deposit NZD and earn interest, or borrow NZD against your ETH and Bitcoin without selling them.",
 });

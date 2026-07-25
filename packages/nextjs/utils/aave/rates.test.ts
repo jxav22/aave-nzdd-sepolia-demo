@@ -41,7 +41,7 @@ describe("rayAprToApyPercent", () => {
   });
 
   it("does not lose the rate to integer truncation at small values", () => {
-    // A 0.01% APR must not round to zero — a low but real rate is not the same as no rate.
+    // A 0.01% APR must not round to zero, a low but real rate is not the same as no rate.
     expect(rayAprToApyPercent(aprRay(0.01))).toBeGreaterThan(0);
   });
 

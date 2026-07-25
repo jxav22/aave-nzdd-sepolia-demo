@@ -21,7 +21,7 @@ import { getParsedError, notification } from "~~/utils/scaffold-eth";
  *
  * Privy handles sign-in and provisions an embedded wallet, so someone can hold a position
  * without ever installing one. The signed-in surface leads with the identity they recognise
- * — their email — and keeps the address available but secondary.
+ * their email, and keeps the address available but secondary.
  *
  * Users with a Privy-created embedded wallet can export the private key via Privy's
  * cross-origin modal (escape hatch); this app never sees the key.
@@ -80,7 +80,7 @@ export const PrivyAuthButton = () => {
     if (!embeddedWalletAddress || !isAddress(embeddedWalletAddress)) return;
     setIsExporting(true);
     try {
-      // Privy's promise resolves when the user exits their modal — close our confirm first.
+      // Privy's promise resolves when the user exits their modal, so close our confirm first.
       setExportConfirmOpen(false);
       await exportWallet({ address: getAddress(embeddedWalletAddress) });
     } catch (e) {
@@ -97,7 +97,7 @@ export const PrivyAuthButton = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Clipboard permission denied — the address is on screen to copy manually.
+      // Clipboard permission denied. The address is on screen to copy manually.
     }
   };
 
@@ -205,6 +205,7 @@ export const PrivyAuthButton = () => {
         ) : null}
       </div>
 
+<<<<<<< HEAD
       {exportConfirmOpen && typeof document !== "undefined"
         ? createPortal(
             <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/40 p-4">
@@ -213,6 +214,34 @@ export const PrivyAuthButton = () => {
                 aria-modal="true"
                 aria-labelledby="export-pk-title"
                 className="my-auto w-full max-w-md max-h-[min(100%,calc(100dvh-2rem))] overflow-y-auto rounded-xl border border-border bg-card p-5 shadow-card"
+=======
+      {exportConfirmOpen ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
+          <div
+            role="dialog"
+            aria-labelledby="export-pk-title"
+            className="w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-card"
+          >
+            <h2 id="export-pk-title" className="text-lg font-semibold">
+              Export wallet private key
+            </h2>
+            <div className="mt-4 flex gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+              <ShieldExclamationIcon className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+              <span className="font-medium">
+                Anyone with this private key has full control of your wallet and funds. Never share it.
+              </span>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Continue only if you are moving this wallet to another client (for example MetaMask). The key is shown in
+              a secure Privy window. This app never sees it.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-full border border-input px-4 py-2 text-sm hover:bg-secondary"
+                onClick={() => setExportConfirmOpen(false)}
+                disabled={isExporting}
+>>>>>>> 71c72fc7a00f576a74ea0796dffdce2f50e835db
               >
                 <h2 id="export-pk-title" className="text-lg font-semibold">
                   Export wallet private key

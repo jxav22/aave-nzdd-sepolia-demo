@@ -16,7 +16,7 @@ export type AmountFieldProps = {
   label: ReactNode;
   value: string;
   onChange: (value: string) => void;
-  /** Token decimals — 6 for dNZD, 18 for wETH, 8 for wBTC. Never assume 18. */
+  /** Token decimals, 6 for dNZD, 18 for wETH, 8 for wBTC. Never assume 18. */
   decimals: number;
   /** Rendered before the number, e.g. "NZ$". */
   prefix?: ReactNode;

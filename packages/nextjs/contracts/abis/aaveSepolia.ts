@@ -1,7 +1,7 @@
 /**
  * Minimal ABIs for Aave V3 Pool, underlying ERC-20, aToken, and mintable testnet ERC-20.
  * Shared by the official Sepolia EURS market and the hackathon dNZD market.
- * Kept small on purpose — do not pull full protocol ABIs.
+ * Kept small on purpose, do not pull full protocol ABIs.
  */
 
 export const aaveV3PoolAbi = [
@@ -162,7 +162,7 @@ export const erc20Abi = [
   },
 ] as const;
 
-/** TestnetERC20 (Ownable) — used by hackathon dNZD for owner faucet minting. */
+/** TestnetERC20 (Ownable), used by hackathon dNZD for owner faucet minting. */
 export const mintableErc20Abi = [
   {
     type: "function",
@@ -258,7 +258,7 @@ export const aTokenAbi = [
   },
 ] as const;
 
-/** WETH9 — wrap/unwrap native ETH for the hackathon market. */
+/** WETH9, wrap/unwrap native ETH for the hackathon market. */
 export const weth9Abi = [
   ...erc20Abi,
   {
@@ -277,7 +277,7 @@ export const weth9Abi = [
   },
 ] as const;
 
-/** AaveOracle — asset prices in the market's base currency (8 decimals here). */
+/** AaveOracle, asset prices in the market's base currency (8 decimals here). */
 export const aaveOracleAbi = [
   {
     type: "function",
@@ -295,7 +295,7 @@ export const aaveOracleAbi = [
   },
 ] as const;
 
-/** AaveProtocolDataProvider — per-reserve configuration, notably the liquidation threshold. */
+/** AaveProtocolDataProvider, per-reserve configuration, notably the liquidation threshold. */
 export const protocolDataProviderAbi = [
   {
     type: "function",
@@ -337,7 +337,7 @@ export const protocolDataProviderAbi = [
   },
   {
     // Aggregate reserve state. `liquidityRate` / `variableBorrowRate` are per-second
-    // APRs in ray (1e27) — see `utils/aave/rates.ts` for the APY conversion.
+    // APRs in ray (1e27), see `utils/aave/rates.ts` for the APY conversion.
     type: "function",
     name: "getReserveData",
     stateMutability: "view",
@@ -369,7 +369,7 @@ export const protocolDataProviderAbi = [
   },
 ] as const;
 
-/** Aave WrappedTokenGatewayV3 — depositETH wraps + supplies in one tx. */
+/** Aave WrappedTokenGatewayV3, depositETH wraps + supplies in one tx. */
 export const wrappedTokenGatewayAbi = [
   {
     type: "function",

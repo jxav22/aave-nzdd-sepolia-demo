@@ -41,7 +41,7 @@ const AavePage: NextPage = () => {
           <p className="mt-2 text-sm opacity-80">Prototype settlement asset</p>
           <p className="text-base font-medium">Underlying test asset: EURS on Ethereum Sepolia</p>
           <p className="text-sm opacity-70 mt-1">
-            This is Aave&apos;s official Sepolia test EURS — not NZDD and not USDC. Public Sepolia USDC is supply-capped
+            This is Aave&apos;s official Sepolia test EURS, not NZDD and not USDC. Public Sepolia USDC is supply-capped
             on this market (Aave error 51), so the integration uses uncapped EURS instead. Same-asset supply and
             variable borrow.
           </p>
@@ -62,8 +62,8 @@ const AavePage: NextPage = () => {
               {state.isConnected
                 ? state.isCorrectNetwork
                   ? "Ethereum Sepolia"
-                  : "Wrong network — switch to Sepolia"
-                : "—"}
+                  : "Wrong network. Switch to Sepolia"
+                : "-"}
             </span>
           </div>
           {state.isConnected && !state.isCorrectNetwork && (
@@ -135,7 +135,7 @@ const AavePage: NextPage = () => {
                 .
               </p>
               <p>
-                Do not use Circle Sepolia USDC or Base USDC — different chains/contracts will not work with this Pool.
+                Do not use Circle Sepolia USDC or Base USDC. Different chains/contracts will not work with this Pool.
               </p>
             </div>
           </div>

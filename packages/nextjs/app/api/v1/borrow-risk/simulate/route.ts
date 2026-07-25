@@ -2,7 +2,7 @@
  * POST /api/v1/borrow-risk/simulate
  *
  * Runs the stress engine over a caller-supplied position. No wallet, no chain read and
- * no dependency on our market — any Aave-compatible position expressed in a common base
+ * no dependency on our market, any Aave-compatible position expressed in a common base
  * currency can be assessed here.
  *
  * Body:

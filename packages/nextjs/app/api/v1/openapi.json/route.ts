@@ -1,5 +1,5 @@
 /**
- * GET /api/v1/openapi.json — machine-readable description of the public API.
+ * GET /api/v1/openapi.json, machine-readable description of the public API.
  *
  * The server URL is derived from the incoming request so the document works unchanged
  * on localhost, a preview deployment and production.

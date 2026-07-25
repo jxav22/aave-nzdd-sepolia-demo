@@ -14,15 +14,15 @@ import { formatPercent } from "~~/utils/format/money";
 /**
  * The full stress tester.
  *
- * One primary path — assess a real position, defaulting to the connected account — with a single
+ * One primary path, assess a real position, defaulting to the connected account, with a single
  * disclosure for describing a position by hand. The hand-entered path calls the stateless
  * simulate endpoint, so it needs no wallet, no address and no market position of any kind.
  */
 
 const TARGET_OPTIONS = [
-  { value: "1.1", label: "1.1 — a slim buffer" },
-  { value: "1.2", label: "1.2 — a moderate buffer" },
-  { value: "1.5", label: "1.5 — a large buffer" },
+  { value: "1.1", label: "1.1 (a slim buffer)" },
+  { value: "1.2", label: "1.2 (a moderate buffer)" },
+  { value: "1.5", label: "1.5 (a large buffer)" },
 ];
 
 const SHOCK_OPTIONS = ["10", "20", "30"];

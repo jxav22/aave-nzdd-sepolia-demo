@@ -73,7 +73,7 @@ export function getPublicClient() {
   return client;
 }
 
-/** Test hook — drops the memoised client so a stubbed RPC URL takes effect. */
+/** Test hook, drops the memoised client so a stubbed RPC URL takes effect. */
 export function resetPublicClient(): void {
   client = null;
 }

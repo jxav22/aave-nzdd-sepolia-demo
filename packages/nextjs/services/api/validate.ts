@@ -79,7 +79,7 @@ export function parseTargetHealthFactor(value: string | null | undefined, field 
   if (wad < WAD) {
     throw new ApiError(
       "INVALID_TARGET_HEALTH_FACTOR",
-      `"${field}" must be at least 1.0 — a target below 1 describes an already-liquidatable position.`,
+      `"${field}" must be at least 1.0. A target below 1 describes an already-liquidatable position.`,
       field,
     );
   }

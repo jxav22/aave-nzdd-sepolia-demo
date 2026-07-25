@@ -2,7 +2,7 @@ import type { SessionOptions } from "iron-session";
 
 /**
  * App session cookie populated after Privy JWT verification.
- * Treat as a convenience mirror of Privy auth — re-verify the Privy access token
+ * Treat as a convenience mirror of Privy auth, re-verify the Privy access token
  * on sensitive server actions rather than trusting this cookie alone.
  */
 export type AuthSessionData = {
@@ -15,7 +15,7 @@ export type AuthSessionData = {
 
 export const defaultSession: AuthSessionData = { isLoggedIn: false };
 
-/** Lazy getter — defers env evaluation so `next build` does not require secrets. */
+/** Lazy getter, defers env evaluation so `next build` does not require secrets. */
 export function getSessionOptions(): SessionOptions {
   const secret = process.env.IRON_SESSION_SECRET;
   const password =

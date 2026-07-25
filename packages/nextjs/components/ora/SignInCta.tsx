@@ -8,7 +8,7 @@ import { isPrivyEnabled } from "~~/utils/auth/isPrivyEnabled";
  * Sign-in call to action.
  *
  * `isPrivyEnabled` is fixed for a given build, so branching on it selects between two
- * components rather than conditionally calling a hook — `usePrivy` is only ever reached
+ * components rather than conditionally calling a hook, `usePrivy` is only ever reached
  * when the provider is mounted.
  */
 

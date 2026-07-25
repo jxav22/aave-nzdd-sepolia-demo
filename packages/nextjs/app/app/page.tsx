@@ -17,7 +17,7 @@ import { isPrivyEnabled } from "~~/utils/auth/isPrivyEnabled";
 import { formatNzd, truncateAddress } from "~~/utils/format/money";
 
 /**
- * The account page — everything someone does with their money, on one page.
+ * The account page, everything someone does with their money, on one page.
  *
  * Where they stand comes first, then the two things they can do. `?intent=earn` or
  * `?intent=borrow` from the landing page decides which is open on arrival; neither path is
@@ -204,7 +204,7 @@ const SignedOut = () => (
             <em className="text-[var(--pine)]">to get started.</em>
           </h1>
           <p className="mt-6 max-w-md text-muted-foreground">
-            Your deposits and loans stay under your own control. Ora never holds your money — every transaction is one
+            Your deposits and loans stay under your own control. Ora never holds your money. Every transaction is one
             you approve yourself.
           </p>
         </>

@@ -174,7 +174,7 @@ export async function supplyEth(ctx: WriteCtx, amountEth: string): Promise<Hash>
 
 /**
  * Best-effort cleanup so a failed mid-run does not leave debt / aTokens stuck.
- * Swallows errors — callers should still assert happy-path cleanup.
+ * Swallows errors, callers should still assert happy-path cleanup.
  */
 export async function bestEffortCleanup(ctx: WriteCtx, symbols: HackathonAssetSymbol[]): Promise<void> {
   for (const symbol of symbols) {

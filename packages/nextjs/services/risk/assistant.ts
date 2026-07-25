@@ -8,7 +8,7 @@
  *
  * Every step is recorded in a trace the caller can display, so the Binance Skill call is
  * visible rather than implied. Because no model is in the loop, no number in the output
- * can be invented — all of them come from the chain or from `utils/risk/stress.ts`.
+ * can be invented, all of them come from the chain or from `utils/risk/stress.ts`.
  */
 import type { Address } from "viem";
 import { aaveHackathonMnzdConfig } from "~~/config/aaveHackathonMnzd";

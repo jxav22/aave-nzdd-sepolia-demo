@@ -20,7 +20,7 @@ import {
  * Rates and risk, on one page.
  *
  * Two stacked sections: what the market currently charges and pays, and the stress tester. The
- * technical detail — configuration, contract addresses, which prices come from a live feed — is
+ * technical detail, configuration, contract addresses, which prices come from a live feed, is
  * available but folded away, because it matters to a handful of people and to nobody else.
  */
 
@@ -122,7 +122,7 @@ const MarketPage: NextPage = () => {
           <StressTester />
         </div>
         <p className="mt-6 text-sm text-muted-foreground">
-          This assessment is also available as an API —{" "}
+          This assessment is also available as an API:{" "}
           <a href="/developer-api" className="underline underline-offset-4 hover:text-foreground">
             documentation for developers
           </a>
@@ -191,7 +191,7 @@ const ReserveRow = ({ reserve }: { reserve: ReserveSummary }) => {
         </td>
         <td className="tabular px-5 py-4 text-right font-mono">{formatPercent(reserve.borrowApyPercent)}</td>
         <td className="tabular px-5 py-4 text-right font-mono">
-          {reserve.canBeCollateral ? formatPercent(reserve.maxLtvPercent, 0) : "—"}
+          {reserve.canBeCollateral ? formatPercent(reserve.maxLtvPercent, 0) : "-"}
         </td>
       </tr>
 

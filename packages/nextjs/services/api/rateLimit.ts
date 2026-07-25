@@ -89,7 +89,7 @@ export function rateLimitHeaders(result: RateLimitResult): Record<string, string
   return headers;
 }
 
-/** Test hook — clears all buckets between cases. */
+/** Test hook, clears all buckets between cases. */
 export function resetRateLimits(): void {
   buckets.clear();
 }

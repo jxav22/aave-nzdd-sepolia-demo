@@ -5,7 +5,7 @@ import type { SimulationResult } from "~~/services/risk/simulate";
 import { AAVE_BASE_CURRENCY_DECIMALS, parseTokenAmount } from "~~/utils/aave/amount";
 
 /**
- * Calls `POST /api/v1/borrow-risk/simulate` — the stateless endpoint that assesses a position
+ * Calls `POST /api/v1/borrow-risk/simulate`, the stateless endpoint that assesses a position
  * described entirely by the caller. No wallet, no chain read, no position on this market.
  *
  * The endpoint works in integer base units. People type dollars, so the conversion happens here

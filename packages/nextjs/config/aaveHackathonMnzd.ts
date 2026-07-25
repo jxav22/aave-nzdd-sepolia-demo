@@ -100,7 +100,7 @@ if (!wrappedTokenGateway || !isAddress(wrappedTokenGateway)) {
   throw new Error("hackathon-market.json: wrappedTokenGateway is missing or invalid.");
 }
 
-/** @deprecated Prefer `assets.dNZD` — kept for single-asset call sites. */
+/** @deprecated Prefer `assets.dNZD`, kept for single-asset call sites. */
 const dNZD = assetsBySymbol.dNZD;
 
 export const aaveHackathonMnzdConfig = {
@@ -116,7 +116,7 @@ export const aaveHackathonMnzdConfig = {
   assetSymbols: REQUIRED_SYMBOLS,
   assets: assetsBySymbol,
   assetsList,
-  /** Legacy single-asset field — always dNZD. */
+  /** Legacy single-asset field, always dNZD. */
   asset: {
     protocolSymbol: dNZD.protocolSymbol,
     displaySymbol: dNZD.displaySymbol,

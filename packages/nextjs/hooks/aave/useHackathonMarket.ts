@@ -31,7 +31,7 @@ export type ReserveSummary = {
 
   totalSupplied: bigint;
   totalBorrowed: bigint;
-  /** Deposited minus borrowed — what can actually be borrowed or withdrawn right now. */
+  /** Deposited minus borrowed, what can actually be borrowed or withdrawn right now. */
   availableLiquidity: bigint;
 
   supplyApyPercent: number;
