@@ -1,137 +1,105 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import Image from "next/image";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { hardhat } from "viem/chains";
-import {
-  Bars3Icon,
-  BugAntIcon,
-  ChatBubbleLeftRightIcon,
-  CpuChipIcon,
-  CurrencyDollarIcon,
-} from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { PrivyAuthButton } from "~~/components/PrivyAuthButton";
-import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
-import { useOutsideClick, useTargetNetwork } from "~~/hooks/scaffold-eth";
+import { OraMark } from "~~/components/ora/OraMark";
+import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
+import { useOutsideClick } from "~~/hooks/scaffold-eth";
 import { isPrivyEnabled } from "~~/utils/auth/isPrivyEnabled";
 
-type HeaderMenuLink = {
-  label: string;
-  href: string;
-  icon?: React.ReactNode;
-};
+type NavLink = { label: string; href: string };
 
-export const menuLinks: HeaderMenuLink[] = [
-  {
-    label: "Home",
-    href: "/",
-  },
-  {
-    label: "Hackathon Market",
-    href: "/mnzd",
-    icon: <CurrencyDollarIcon className="h-4 w-4" />,
-  },
-  {
-    label: "Developer API",
-    href: "/developer-api",
-    icon: <CpuChipIcon className="h-4 w-4" />,
-  },
-  {
-    label: "API Agent",
-    href: "/binance-chat",
-    icon: <ChatBubbleLeftRightIcon className="h-4 w-4" />,
-  },
-  {
-    label: "Debug Contracts",
-    href: "/debug",
-    icon: <BugAntIcon className="h-4 w-4" />,
-  },
+/** Two links, deliberately. Everything else lives in the footer. */
+const NAV_LINKS: NavLink[] = [
+  { label: "Your account", href: "/app" },
+  { label: "Rates & risk", href: "/market" },
 ];
 
-export const HeaderMenuLinks = () => {
+export const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Warm Turbopack compiles for nav targets so the first soft navigation does not
-  // race an uncompiled route (RSC "Failed to fetch" → full reload fallback).
+  useOutsideClick(menuRef, () => setMenuOpen(false));
+
+  // Warm the route compiles so the first soft navigation does not race an uncompiled route.
   useEffect(() => {
-    for (const { href } of menuLinks) {
-      if (href !== "/") {
-        router.prefetch(href);
-      }
+    for (const { href } of NAV_LINKS) {
+      router.prefetch(href);
     }
   }, [router]);
 
-  return (
-    <>
-      {menuLinks.map(({ label, href, icon }) => {
-        const isActive = pathname === href;
-        return (
-          <li key={href} className="h-full">
-            <Link
-              href={href}
-              prefetch
-              className={`${
-                isActive ? "bg-base-300" : ""
-              } hover:bg-base-300 focus:!bg-base-300 h-full px-4 text-sm gap-2 flex items-center whitespace-nowrap`}
-            >
-              {icon}
-              <span>{label}</span>
-            </Link>
-          </li>
-        );
-      })}
-    </>
-  );
-};
-
-/**
- * Site header
- */
-export const Header = () => {
-  const { targetNetwork } = useTargetNetwork();
-  const isLocalNetwork = targetNetwork.id === hardhat.id;
-
-  const burgerMenuRef = useRef<HTMLDetailsElement>(null);
-  useOutsideClick(burgerMenuRef, () => {
-    burgerMenuRef?.current?.removeAttribute("open");
-  });
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   return (
-    <div className="sticky lg:static top-0 navbar bg-base-100 min-h-16 shrink-0 justify-between z-20 border-b-2 border-base-300 p-0 sm:px-2">
-      <div className="navbar-start w-auto self-stretch">
-        <details className="dropdown" ref={burgerMenuRef}>
-          <summary className="ml-1 btn btn-ghost lg:hidden hover:bg-transparent">
-            <Bars3Icon className="h-1/2" />
-          </summary>
-          <ul
-            className="menu menu-compact dropdown-content mt-3 p-2 shadow-lg bg-base-100 w-52"
-            onClick={() => {
-              burgerMenuRef?.current?.removeAttribute("open");
-            }}
-          >
-            <HeaderMenuLinks />
-          </ul>
-        </details>
-        <Link href="/" className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
-          <div className="flex relative w-10 h-10">
-            <Image alt="SE2 logo" className="cursor-pointer" fill src="/logo.svg" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold leading-tight">Scaffold-ETH</span>
-            <span className="text-xs">Ethereum dev stack</span>
-          </div>
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
+      <div className="container-page flex h-16 items-center justify-between gap-4">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <OraMark />
+          <span className="font-display text-xl leading-none">Ora</span>
+          <span className="ml-1 hidden font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground sm:inline">
+            Aotearoa
+          </span>
         </Link>
-        <ul className="hidden lg:flex lg:flex-nowrap h-full m-0 p-0 list-none">
-          <HeaderMenuLinks />
-        </ul>
+
+        <nav className="hidden items-center gap-8 text-sm md:flex">
+          {NAV_LINKS.map(({ label, href }) => {
+            const isActive = pathname === href || pathname.startsWith(`${href}/`);
+            return (
+              <Link
+                key={href}
+                href={href}
+                prefetch
+                aria-current={isActive ? "page" : undefined}
+                className={`transition-colors ${isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:block">
+            {isPrivyEnabled ? <PrivyAuthButton /> : <RainbowKitCustomConnectButton />}
+          </div>
+
+          <div className="relative md:hidden" ref={menuRef}>
+            <button
+              type="button"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(open => !open)}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-input text-foreground"
+            >
+              {menuOpen ? <XMarkIcon className="h-4 w-4" /> : <Bars3Icon className="h-4 w-4" />}
+            </button>
+
+            {menuOpen ? (
+              <div className="absolute right-0 top-11 w-56 rounded-xl border border-border bg-card p-2 shadow-card">
+                {NAV_LINKS.map(({ label, href }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="block rounded-lg px-3 py-2.5 text-sm text-foreground hover:bg-secondary"
+                  >
+                    {label}
+                  </Link>
+                ))}
+                <div className="hairline mt-2 px-3 pt-3 sm:hidden">
+                  {isPrivyEnabled ? <PrivyAuthButton /> : <RainbowKitCustomConnectButton />}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
       </div>
-      <div className="navbar-end grow mr-4">
-        {isPrivyEnabled ? <PrivyAuthButton /> : <RainbowKitCustomConnectButton />}
-        {isLocalNetwork && <FaucetButton />}
-      </div>
-    </div>
+    </header>
   );
 };

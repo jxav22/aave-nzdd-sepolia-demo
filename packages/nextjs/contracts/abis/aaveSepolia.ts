@@ -335,6 +335,38 @@ export const protocolDataProviderAbi = [
       { name: "usageAsCollateralEnabled", type: "bool" },
     ],
   },
+  {
+    // Aggregate reserve state. `liquidityRate` / `variableBorrowRate` are per-second
+    // APRs in ray (1e27) — see `utils/aave/rates.ts` for the APY conversion.
+    type: "function",
+    name: "getReserveData",
+    stateMutability: "view",
+    inputs: [{ name: "asset", type: "address" }],
+    outputs: [
+      { name: "unbacked", type: "uint256" },
+      { name: "accruedToTreasuryScaled", type: "uint256" },
+      { name: "totalAToken", type: "uint256" },
+      { name: "totalStableDebt", type: "uint256" },
+      { name: "totalVariableDebt", type: "uint256" },
+      { name: "liquidityRate", type: "uint256" },
+      { name: "variableBorrowRate", type: "uint256" },
+      { name: "stableBorrowRate", type: "uint256" },
+      { name: "averageStableBorrowRate", type: "uint256" },
+      { name: "liquidityIndex", type: "uint256" },
+      { name: "variableBorrowIndex", type: "uint256" },
+      { name: "lastUpdateTimestamp", type: "uint40" },
+    ],
+  },
+  {
+    type: "function",
+    name: "getReserveCaps",
+    stateMutability: "view",
+    inputs: [{ name: "asset", type: "address" }],
+    outputs: [
+      { name: "borrowCap", type: "uint256" },
+      { name: "supplyCap", type: "uint256" },
+    ],
+  },
 ] as const;
 
 /** Aave WrappedTokenGatewayV3 — depositETH wraps + supplies in one tx. */

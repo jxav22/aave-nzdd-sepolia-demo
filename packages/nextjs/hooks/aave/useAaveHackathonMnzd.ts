@@ -434,7 +434,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
         }
 
         await refetchAllowance();
-        notification.success(`Approved ${amount} ${symbol} for the hackathon Pool.`);
+        notification.success(`Approved ${amount} ${symbol} for the Ora market.`);
       } catch (e) {
         const message = mapTxError(e, "Approval failed.");
         setError(message);
@@ -463,7 +463,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
 
         if (!hasSufficientAllowance(parsed, currentAllowance)) {
           throw new Error(
-            "Insufficient allowance. Approve the hackathon Pool for this amount first (separate transaction).",
+            "Insufficient allowance. Approve the lending pool for this amount first (separate transaction).",
           );
         }
 
@@ -477,7 +477,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
         }
 
         await refresh();
-        notification.success(`Supplied ${amount} ${symbol} to the hackathon market.`);
+        notification.success(`Supplied ${amount} ${symbol} to the Ora market.`);
       } catch (e) {
         const message = mapTxError(e, "Supply failed.");
         setError(message);
@@ -522,7 +522,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
         }
 
         await refresh();
-        notification.success(`Withdrew ${amount} ${symbol} from the hackathon market.`);
+        notification.success(`Withdrew ${amount} ${symbol} from the Ora market.`);
       } catch (e) {
         const message = mapTxError(
           e,
@@ -567,7 +567,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
       }
 
       await refresh();
-      notification.success(`Withdrew full ${symbol} position from the hackathon market.`);
+      notification.success(`Withdrew full ${symbol} position from the Ora market.`);
     } catch (e) {
       const message = mapTxError(
         e,
@@ -599,7 +599,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
         }
 
         await refresh();
-        notification.success(`Borrowed ${amount} ${symbol} from the hackathon market.`);
+        notification.success(`Borrowed ${amount} ${symbol} from the Ora market.`);
       } catch (e) {
         const message = mapTxError(
           e,
@@ -636,7 +636,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
 
         if (!hasSufficientAllowance(parsed, currentAllowance)) {
           throw new Error(
-            "Insufficient allowance. Approve the hackathon Pool for this amount first (separate transaction).",
+            "Insufficient allowance. Approve the lending pool for this amount first (separate transaction).",
           );
         }
 
@@ -650,7 +650,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
         }
 
         await refresh();
-        notification.success(`Repaid ${amount} ${symbol} on the hackathon market.`);
+        notification.success(`Repaid ${amount} ${symbol} on the Ora market.`);
       } catch (e) {
         const message = mapTxError(e, "Repay failed.");
         setError(message);
@@ -694,7 +694,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
 
       if (!hasSufficientAllowance(debt, currentAllowance)) {
         throw new Error(
-          `Insufficient allowance. Approve at least ${formatUnits(debt, decimals)} ${symbol} for the hackathon Pool first (separate transaction).`,
+          `Insufficient allowance. Approve at least ${formatUnits(debt, decimals)} ${symbol} for the lending pool first (separate transaction).`,
         );
       }
 
@@ -708,7 +708,7 @@ export function useAaveHackathonMnzd(selectedAsset: HackathonAssetSymbol = "wETH
       }
 
       await refresh();
-      notification.success(`Repaid full ${symbol} debt on the hackathon market.`);
+      notification.success(`Repaid full ${symbol} debt on the Ora market.`);
     } catch (e) {
       const message = mapTxError(e, "Repay-all failed.");
       setError(message);

@@ -1,80 +1,103 @@
 import React from "react";
 import Link from "next/link";
-import { useFetchNativeCurrencyPrice } from "@scaffold-ui/hooks";
-import { hardhat } from "viem/chains";
-import { CurrencyDollarIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { HeartIcon } from "@heroicons/react/24/outline";
-import { SwitchTheme } from "~~/components/SwitchTheme";
-import { BuidlGuidlLogo } from "~~/components/assets/BuidlGuidlLogo";
-import { Faucet } from "~~/components/scaffold-eth";
-import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
+import { OraMark } from "~~/components/ora/OraMark";
+import { aaveHackathonMnzdConfig } from "~~/config/aaveHackathonMnzd";
 
-/**
- * Site footer
- */
+const PRODUCT_LINKS = [
+  { label: "Your account", href: "/app" },
+  { label: "Rates & risk", href: "/market" },
+];
+
+/** Everything de-emphasised from the header ends up here. */
+const TECHNICAL_LINKS = [
+  { label: "API for developers", href: "/developer-api" },
+  { label: "Ask the API agent", href: "/binance-chat" },
+  { label: "Advanced panel", href: "/advanced" },
+];
+
 export const Footer = () => {
-  const { targetNetwork } = useTargetNetwork();
-  const isLocalNetwork = targetNetwork.id === hardhat.id;
-  const { price: nativeCurrencyPrice } = useFetchNativeCurrencyPrice();
+  const explorer = `${aaveHackathonMnzdConfig.explorerBaseUrl}/address/${aaveHackathonMnzdConfig.poolAddress}`;
 
   return (
-    <div className="min-h-0 py-5 px-1 mb-11 lg:mb-0">
-      <div>
-        <div className="fixed flex justify-between items-center w-full z-10 p-4 bottom-0 left-0 pointer-events-none">
-          <div className="flex flex-col md:flex-row gap-2 pointer-events-auto">
-            {nativeCurrencyPrice > 0 && (
-              <div>
-                <div className="btn btn-primary btn-sm font-normal gap-1 cursor-auto">
-                  <CurrencyDollarIcon className="h-4 w-4" />
-                  <span>{nativeCurrencyPrice.toFixed(2)}</span>
-                </div>
-              </div>
-            )}
-            {isLocalNetwork && (
-              <>
-                <Faucet />
-                <Link href="/blockexplorer" passHref className="btn btn-primary btn-sm font-normal gap-1">
-                  <MagnifyingGlassIcon className="h-4 w-4" />
-                  <span>Block Explorer</span>
-                </Link>
-              </>
-            )}
-          </div>
-          <SwitchTheme className={`pointer-events-auto ${isLocalNetwork ? "self-end md:self-auto" : ""}`} />
+    <footer className="mt-auto border-t border-border bg-[var(--paper)]/50">
+      <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="sm:col-span-2 lg:col-span-1">
+          <Link href="/" className="flex items-center gap-2.5">
+            <OraMark size={22} />
+            <span className="font-display text-lg leading-none">Ora</span>
+          </Link>
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+            A New Zealand dollar lending market. Earn on NZD, or borrow against the crypto you already hold.
+          </p>
         </div>
-      </div>
-      <div className="w-full">
-        <ul className="menu menu-horizontal w-full">
-          <div className="flex justify-center items-center gap-2 text-sm w-full">
-            <div className="text-center">
-              <a href="https://github.com/scaffold-eth/se-2" target="_blank" rel="noreferrer" className="link">
-                Fork me
-              </a>
-            </div>
-            <span>·</span>
-            <div className="flex justify-center items-center gap-2">
-              <p className="m-0 text-center">
-                Built with <HeartIcon className="inline-block h-4 w-4" /> at
-              </p>
+
+        <nav aria-label="Product">
+          <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Product</h2>
+          <ul className="mt-4 flex flex-col gap-2.5 text-sm">
+            {PRODUCT_LINKS.map(link => (
+              <li key={link.href}>
+                <Link href={link.href} className="text-muted-foreground transition-colors hover:text-foreground">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <nav aria-label="Developers">
+          <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Developers</h2>
+          <ul className="mt-4 flex flex-col gap-2.5 text-sm">
+            {TECHNICAL_LINKS.map(link => (
+              <li key={link.href}>
+                <Link href={link.href} className="text-muted-foreground transition-colors hover:text-foreground">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+            <li>
               <a
-                className="flex justify-center items-center gap-1"
-                href="https://buidlguidl.com/"
+                href="/api/v1/openapi.json"
+                className="text-muted-foreground transition-colors hover:text-foreground"
                 target="_blank"
                 rel="noreferrer"
               >
-                <BuidlGuidlLogo className="w-3 h-5 pb-1" />
-                <span className="link">BuidlGuidl</span>
+                OpenAPI specification
               </a>
-            </div>
-            <span>·</span>
-            <div className="text-center">
-              <a href="https://t.me/joinchat/KByvmRe5wkR-8F_zz6AjpA" target="_blank" rel="noreferrer" className="link">
-                Support
+            </li>
+          </ul>
+        </nav>
+
+        <div>
+          <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Market</h2>
+          <ul className="mt-4 flex flex-col gap-2.5 text-sm">
+            <li>
+              <a
+                href={explorer}
+                target="_blank"
+                rel="noreferrer"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Lending pool contract
               </a>
-            </div>
-          </div>
-        </ul>
+            </li>
+            <li>
+              <Link href="/market" className="text-muted-foreground transition-colors hover:text-foreground">
+                All contract addresses
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
+
+      <div className="border-t border-border/60">
+        <div className="container-page flex flex-col gap-3 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span className="font-mono uppercase tracking-[0.18em]">Ora · Aotearoa New Zealand</span>
+          <span className="max-w-xl leading-relaxed">
+            Interest rates vary with market conditions and are not guaranteed. Borrowing against collateral carries a
+            risk of liquidation. Nothing here is financial or tax advice.
+          </span>
+        </div>
+      </div>
+    </footer>
   );
 };

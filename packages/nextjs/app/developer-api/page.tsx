@@ -281,7 +281,7 @@ const DeveloperApiPage: NextPage = () => {
           <p className="text-base font-medium">Open, unauthenticated, read-only. No API key. No wallet signature.</p>
           <p className="text-sm opacity-70 mt-1">
             Exercises the main published routes under <code>/api/v1/*</code>, including Binance-backed market context
-            and the hackathon Aave position / borrow-risk surface. Spec:{" "}
+            and the Ora Aave position / borrow-risk surface. Spec:{" "}
             <a className="link" href="/api/v1/openapi.json" target="_blank" rel="noreferrer">
               /api/v1/openapi.json
             </a>{" "}
@@ -504,7 +504,7 @@ const DeveloperApiPage: NextPage = () => {
         {active === "position" && (
           <section className="flex flex-col gap-4">
             <p className="text-sm opacity-80">
-              <code>GET /api/v1/position/{"{address}"}</code> — raw Sepolia hackathon Aave position (RPC).
+              <code>GET /api/v1/position/{"{address}"}</code> — raw Aave position read (RPC).
             </p>
             <form onSubmit={onPosition} className="bg-base-200 rounded-lg p-4 flex flex-col sm:flex-row gap-2">
               <input
