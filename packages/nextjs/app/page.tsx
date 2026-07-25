@@ -28,25 +28,41 @@ const Landing: NextPage = () => {
 
 export default Landing;
 
+/**
+ * The hero fills the first screen and centres in it.
+ *
+ * Height is measured in `svh`, not `vh`, because on a phone `100vh` is the viewport with the
+ * browser chrome hidden, which is taller than what is actually visible on load and cuts the
+ * bottom off. `svh` is the smallest viewport, so the hero fits whether the chrome is showing
+ * or not. Padding is symmetric so the centring is true rather than optically low, and the
+ * height is a minimum, so on a short screen the content grows and scrolls instead of clipping.
+ */
 const Hero = () => (
-  <section className="relative overflow-hidden">
-    <div className="grain container-page grid gap-16 pt-16 pb-20 lg:grid-cols-[1.15fr_1fr] lg:pt-24 lg:pb-28">
+  <section className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden">
+    <div className="grain container-page grid w-full gap-10 py-[clamp(1.5rem,4svh,3rem)] lg:grid-cols-[1.15fr_1fr] lg:gap-12">
       <div>
         <Eyebrow>Aotearoa New Zealand</Eyebrow>
-        <h1 className="mt-5 font-display text-[3.25rem] leading-[1.02] tracking-[-0.02em] sm:text-[4.5rem] lg:text-[5rem]">
+        {/*
+          Sized from the space it has to live in rather than from width breakpoints. The headline
+          is three lines, so its height is what decides whether the hero clears the fold, and a
+          1366x768 laptop is wide enough for the largest width breakpoint while being far too
+          short for it. `svh` tracks the height, `vw` keeps it from overflowing a narrow phone,
+          and the rem bounds keep it legible and respect the user's own font size.
+        */}
+        <h1 className="mt-4 font-display text-[clamp(2.75rem,min(8svh,12vw),5rem)] leading-[1.02] tracking-[-0.02em]">
           Earn on your NZD,
           <br />
           borrow against
           <br />
           <em className="text-[var(--pine)]">your crypto.</em>
         </h1>
-        <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted-foreground">
+        <p className="mt-6 max-w-xl leading-relaxed text-muted-foreground sm:text-lg">
           Nearly every way to earn on-chain is priced in US dollars, so a New Zealander putting savings to work ends up
           holding a currency position they never chose. Ora is denominated in{" "}
           <span className="text-foreground">New Zealand dollars</span> throughout: what you deposit, what you owe and
           what you can borrow are all the same currency.
         </p>
-        <div className="mt-9 flex flex-wrap items-center gap-3">
+        <div className="mt-7 flex flex-wrap items-center gap-3">
           <Link
             href="/app?intent=earn"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-[var(--pine-deep)]"
@@ -61,7 +77,7 @@ const Hero = () => (
             Borrow against your crypto
           </Link>
         </div>
-        <p className="mt-6 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
+        <p className="mt-5 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
           Sign in with an email address · No wallet to install
         </p>
       </div>
