@@ -7,6 +7,7 @@ import type { Address as AddressType } from "viem";
 import { sepolia } from "viem/chains";
 import { useAccount } from "wagmi";
 import { AaveMarketPanel } from "~~/components/aave/AaveMarketPanel";
+import { BorrowRiskAssistant } from "~~/components/aave/BorrowRiskAssistant";
 import { type HackathonAssetSymbol, aaveHackathonMnzdConfig } from "~~/config/aaveHackathonMnzd";
 import { useAaveHackathonMnzd } from "~~/hooks/aave/useAaveHackathonMnzd";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth";
@@ -285,6 +286,15 @@ const MnzdPage: NextPage = () => {
         {state.decimalsMismatch && <div className="alert alert-info text-sm">{state.decimalsMismatch}</div>}
 
         {state.error && <div className="alert alert-error text-sm whitespace-pre-wrap">{state.error}</div>}
+
+        {selectedAsset === "dNZD" && (
+          <BorrowRiskAssistant
+            address={address}
+            amount={amount}
+            onUseAmount={setAmount}
+            isCorrectNetwork={state.isCorrectNetwork}
+          />
+        )}
 
         <AaveMarketPanel
           symbol={state.symbol}

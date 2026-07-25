@@ -81,6 +81,16 @@ Get wETH by wrapping Sepolia ETH (or Supply ETH via WrappedTokenGateway). Mint w
 
 The official Aave Sepolia EURS reference at `/aave` is kept in code but **hidden from nav**. See [docs/AAVE_SEPOLIA.md](docs/AAVE_SEPOLIA.md). Required RPC env var: `ALCHEMY_API_KEY` in `packages/nextjs/.env.local`.
 
+## Binance-powered Borrow Risk Assistant
+
+Before you borrow dNZD, the `/mnzd` page stress-tests the amount against recent public ETH market data from Binance Skills: projected health factors under several price declines, the decline at which you would be liquidated, and a more conservative amount that survives a scenario you pick.
+
+No Binance account or API key is needed, and the assistant never submits a transaction.
+
+- **Docs:** [docs/BORROW_RISK_ASSISTANT.md](docs/BORROW_RISK_ASSISTANT.md) — methodology, data sources, seeding runbook, demo script
+- **Public API:** [docs/API.md](docs/API.md) — `GET /api/v1/borrow-risk`, plus `simulate`, `position`, `market/eth` and an OpenAPI spec
+- **Live check:** `cd packages/nextjs && yarn risk:smoke`
+
 ## Documentation
 
 Visit our [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.

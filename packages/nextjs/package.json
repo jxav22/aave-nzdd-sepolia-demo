@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "aave:smoke": "tsx scripts/aaveSepoliaSmokeCheck.ts",
+    "risk:smoke": "tsx scripts/borrowRiskSmokeCheck.ts",
     "build": "yarn lint && next build",
     "check-types": "tsc --noEmit --incremental",
     "dev": "next dev",

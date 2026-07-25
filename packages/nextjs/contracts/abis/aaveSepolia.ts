@@ -277,6 +277,66 @@ export const weth9Abi = [
   },
 ] as const;
 
+/** AaveOracle — asset prices in the market's base currency (8 decimals here). */
+export const aaveOracleAbi = [
+  {
+    type: "function",
+    name: "getAssetPrice",
+    stateMutability: "view",
+    inputs: [{ name: "asset", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "BASE_CURRENCY_UNIT",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
+
+/** AaveProtocolDataProvider — per-reserve configuration, notably the liquidation threshold. */
+export const protocolDataProviderAbi = [
+  {
+    type: "function",
+    name: "getReserveConfigurationData",
+    stateMutability: "view",
+    inputs: [{ name: "asset", type: "address" }],
+    outputs: [
+      { name: "decimals", type: "uint256" },
+      { name: "ltv", type: "uint256" },
+      { name: "liquidationThreshold", type: "uint256" },
+      { name: "liquidationBonus", type: "uint256" },
+      { name: "reserveFactor", type: "uint256" },
+      { name: "usageAsCollateralEnabled", type: "bool" },
+      { name: "borrowingEnabled", type: "bool" },
+      { name: "stableBorrowRateEnabled", type: "bool" },
+      { name: "isActive", type: "bool" },
+      { name: "isFrozen", type: "bool" },
+    ],
+  },
+  {
+    type: "function",
+    name: "getUserReserveData",
+    stateMutability: "view",
+    inputs: [
+      { name: "asset", type: "address" },
+      { name: "user", type: "address" },
+    ],
+    outputs: [
+      { name: "currentATokenBalance", type: "uint256" },
+      { name: "currentStableDebt", type: "uint256" },
+      { name: "currentVariableDebt", type: "uint256" },
+      { name: "principalStableDebt", type: "uint256" },
+      { name: "scaledVariableDebt", type: "uint256" },
+      { name: "stableBorrowRate", type: "uint256" },
+      { name: "liquidityRate", type: "uint256" },
+      { name: "stableRateLastUpdated", type: "uint40" },
+      { name: "usageAsCollateralEnabled", type: "bool" },
+    ],
+  },
+] as const;
+
 /** Aave WrappedTokenGatewayV3 — depositETH wraps + supplies in one tx. */
 export const wrappedTokenGatewayAbi = [
   {
