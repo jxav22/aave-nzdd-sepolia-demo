@@ -174,9 +174,11 @@ export const BorrowPanel = ({
 
     if (ok) {
       setCollateralAmount("");
-      onRefresh();
-      collateralActions.refresh();
     }
+    // Refresh even when the sequence stopped early: an approval that already went through
+    // has changed the allowance, and a stale one would ask for a second needless signature.
+    onRefresh();
+    collateralActions.refresh();
   };
 
   const runDepositEth = async () => {
@@ -190,9 +192,9 @@ export const BorrowPanel = ({
 
     if (ok) {
       setEthAmount("");
-      onRefresh();
-      collateralActions.refresh();
     }
+    onRefresh();
+    collateralActions.refresh();
   };
 
   const runBorrow = async () => {
@@ -206,9 +208,9 @@ export const BorrowPanel = ({
 
     if (ok) {
       setBorrowAmount("");
-      onRefresh();
-      liveRisk.refetch();
     }
+    onRefresh();
+    liveRisk.refetch();
   };
 
   /** Step 1 done when allowance covers full debt (enough for partial or full repay). */
@@ -249,9 +251,9 @@ export const BorrowPanel = ({
 
     if (ok) {
       setRepayAmount("");
-      onRefresh();
-      liveRisk.refetch();
     }
+    onRefresh();
+    liveRisk.refetch();
   };
 
   return (
@@ -689,17 +691,15 @@ export const BorrowPanel = ({
             <ActionButton
               tone="outline"
               onClick={async () => {
-                const ok = await collateralSequence.run([
+                await collateralSequence.run([
                   {
                     id: "withdraw-collateral",
                     label: `Withdraw your ${COLLATERAL_LABEL[collateralSymbol]}`,
                     run: () => collateralActions.withdrawAll(),
                   },
                 ]);
-                if (ok) {
-                  onRefresh();
-                  collateralActions.refresh();
-                }
+                onRefresh();
+                collateralActions.refresh();
               }}
               busy={collateralSequence.isRunning}
               disabled={!positions.isCorrectNetwork}

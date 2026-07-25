@@ -6,6 +6,7 @@ import scaffoldConfig from "~~/scaffold.config";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { AllowedChainIds, getBlockExplorerTxLink, notification } from "~~/utils/scaffold-eth";
 import { TransactorFuncOptions, getParsedErrorWithAllAbis } from "~~/utils/scaffold-eth/contract";
+import { isUserRejection } from "~~/utils/tx/rejection";
 
 type TransactionFunc = (
   tx: (() => Promise<Hash>) | Parameters<SendTransactionMutate<Config, undefined>>[0],
@@ -95,6 +96,14 @@ export const useTransactor = (_walletClient?: WalletClient): TransactionFunc => 
       if (notificationId) {
         notification.remove(notificationId);
       }
+
+      // Declining the signature is a choice, not a fault. Acknowledge it and stop, without
+      // the error toast and console dump that a genuine failure warrants.
+      if (isUserRejection(error)) {
+        notification.info("Transaction cancelled.");
+        throw error;
+      }
+
       console.error("⚡️ ~ file: useTransactor.ts ~ error", error);
       const message = getParsedErrorWithAllAbis(error, chainId as AllowedChainIds);
 

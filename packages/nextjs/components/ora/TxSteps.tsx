@@ -13,7 +13,9 @@ const MARKER: Record<TxStepStatus, { glyph: string; className: string }> = {
   active: { glyph: "", className: "border-[var(--pine)] text-[var(--pine)]" },
   confirmed: { glyph: "✓", className: "border-[var(--pine)] bg-[var(--pine)] text-[var(--cream)]" },
   failed: { glyph: "!", className: "border-destructive bg-destructive text-[var(--cream)]" },
-  skipped: { glyph: "–", className: "border-border text-muted-foreground/60" },
+  skipped: { glyph: "-", className: "border-border text-muted-foreground/60" },
+  // Declining is not a fault, so it gets the neutral marker rather than the destructive one.
+  cancelled: { glyph: "-", className: "border-border text-muted-foreground" },
 };
 
 const STATUS_TEXT: Record<TxStepStatus, string> = {
@@ -22,6 +24,7 @@ const STATUS_TEXT: Record<TxStepStatus, string> = {
   confirmed: "Done",
   failed: "Failed",
   skipped: "Not run",
+  cancelled: "Cancelled",
 };
 
 export const TxSteps = ({ sequence, className = "" }: { sequence: TxSequenceState; className?: string }) => {
@@ -31,7 +34,22 @@ export const TxSteps = ({ sequence, className = "" }: { sequence: TxSequenceStat
 
   return (
     <div className={`rounded-xl border border-border bg-secondary/40 p-4 ${className}`} aria-live="polite">
-      <Eyebrow>{sequence.isRunning ? "In progress" : sequence.error ? "Stopped" : "Complete"}</Eyebrow>
+      <Eyebrow>
+        {sequence.isRunning
+          ? "In progress"
+          : sequence.isCancelled
+            ? "Cancelled"
+            : sequence.error
+              ? "Stopped"
+              : "Complete"}
+      </Eyebrow>
+
+      {sequence.isCancelled ? (
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+          You cancelled in your wallet, so nothing further was submitted. Anything already marked done went through and
+          stays that way. You can start again whenever you want.
+        </p>
+      ) : null}
 
       <ol className="mt-3 flex flex-col gap-2.5">
         {sequence.steps.map((step, index) => {
